@@ -69,43 +69,29 @@ npm run build      # 本番ビルド（dist/）
 npm run generate-testcases   # shared/testcases/grid-cells.json を再生成
 ```
 
-### Cloudflareへのデプロイ
+### デプロイ（GitHub Pages + GitHub Actions）
 
-**Workers（static assets）を推奨します**（Cloudflareの現行推奨。設定は
-`web/wrangler.jsonc` に定義済み）。第2段階のWorkers API・R2・D1・Queues
-（指示書 §18.3）を同一プロジェクトへ後付けできます。
+MVPは完全静的サイトのため **GitHub Pages** へ GitHub Actions でデプロイします
+（`.github/workflows/deploy.yml`）。`main` へのpushで自動的に
+テスト → ビルド → デプロイが実行されます。
 
-Cloudflareダッシュボード → Workers & Pages → Create → **Import a repository**
-で本リポジトリを接続し、以下を設定します。
+有効化はリポジトリの **Settings → Pages → Source を「GitHub Actions」**
+にするだけです。**環境変数・シークレットは不要**です（APIキーなし、
+地理院タイルは公開URLへ直接アクセス）。
 
-| 設定 | 値 |
-| --- | --- |
-| Root directory | `web` |
-| Build command | `npm ci && npm run build` |
-| Deploy command | `npx wrangler deploy` |
-
-**環境変数は不要**です（完全静的サイト・APIキーなし。地理院タイルは
-公開URLへ直接アクセス）。ビルド環境のNodeバージョンを固定したい場合のみ
-Build variables に `NODE_VERSION=22` を設定してください。
-
-Pull Request ごとに Preview URL が自動発行されます。
-
-GitHub連携を使わず手元からデプロイする場合（`wrangler login` 済みの環境）:
-
-```bash
-cd web
-npm run deploy   # build + wrangler deploy
-```
+サブパス配信（`https://<owner>.github.io/geo-grid-interop/`）に対応するため
+Viteの `base` は相対パス（`./`）とし、ルーティングはURLハッシュのみを
+使用しています。
 
 <details>
-<summary>Cloudflare Pages を使う場合（代替）</summary>
+<summary>Cloudflare Workers（static assets）を使う場合（代替・第2段階向け）</summary>
 
-| 設定 | 値 |
-| --- | --- |
-| Framework preset | `None`（または `Vite`） |
-| Root directory | `web` |
-| Build command | `npm ci && npm run build` |
-| Build output directory | `dist` |
+第2段階のWorkers API・R2・D1・Queues（指示書 §18.3）を導入する際は、
+定義済みの `web/wrangler.jsonc` でCloudflare Workersへ移行できます。
+
+- GitHub連携（Workers Builds）: Root directory `web` /
+  Build command `npm ci && npm run build` / Deploy command `npx wrangler deploy`
+- 手元から: `cd web && npm run deploy`（要 `wrangler login`）
 
 </details>
 
