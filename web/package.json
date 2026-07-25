@@ -9,7 +9,7 @@
     "preview": "vite preview",
     "test": "vitest run",
     "generate-testcases": "vite-node scripts/generate-testcases.ts",
-    "deploy": "npm run build && npx wrangler pages deploy dist --project-name geo-grid-interop"
+    "deploy": "npm run build && npx wrangler deploy"
   },
   "dependencies": {
     "h3-js": "^4.1.0",

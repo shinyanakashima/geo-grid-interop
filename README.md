@@ -69,9 +69,36 @@ npm run build      # 本番ビルド（dist/）
 npm run generate-testcases   # shared/testcases/grid-cells.json を再生成
 ```
 
-### Cloudflare Pages へのデプロイ
+### Cloudflareへのデプロイ
 
-Cloudflare Pages の GitHub 連携で本リポジトリを接続し、以下を設定します。
+**Workers（static assets）を推奨します**（Cloudflareの現行推奨。設定は
+`web/wrangler.jsonc` に定義済み）。第2段階のWorkers API・R2・D1・Queues
+（指示書 §18.3）を同一プロジェクトへ後付けできます。
+
+Cloudflareダッシュボード → Workers & Pages → Create → **Import a repository**
+で本リポジトリを接続し、以下を設定します。
+
+| 設定 | 値 |
+| --- | --- |
+| Root directory | `web` |
+| Build command | `npm ci && npm run build` |
+| Deploy command | `npx wrangler deploy` |
+
+**環境変数は不要**です（完全静的サイト・APIキーなし。地理院タイルは
+公開URLへ直接アクセス）。ビルド環境のNodeバージョンを固定したい場合のみ
+Build variables に `NODE_VERSION=22` を設定してください。
+
+Pull Request ごとに Preview URL が自動発行されます。
+
+GitHub連携を使わず手元からデプロイする場合（`wrangler login` 済みの環境）:
+
+```bash
+cd web
+npm run deploy   # build + wrangler deploy
+```
+
+<details>
+<summary>Cloudflare Pages を使う場合（代替）</summary>
 
 | 設定 | 値 |
 | --- | --- |
@@ -80,23 +107,7 @@ Cloudflare Pages の GitHub 連携で本リポジトリを接続し、以下を�
 | Build command | `npm ci && npm run build` |
 | Build output directory | `dist` |
 
-Root directory を設定しない場合は、Build command を
-`cd web && npm ci && npm run build`、Build output directory を `web/dist` にします。
-
-**環境変数**: アプリ側の環境変数・APIキーは不要です（完全静的サイトで、
-地理院タイルは公開URLへ直接アクセス）。ビルド環境のNodeバージョンを
-固定したい場合のみ `NODE_VERSION=22` を設定してください。
-
-Pull Request ごとの Preview 環境が自動で発行されます。
-
-GitHub連携を使わず手元からデプロイする場合（`wrangler login` 済みの環境）:
-
-```bash
-cd web
-npm run deploy   # build + wrangler pages deploy dist
-```
-
-Workers / R2 / D1 / Queues を用いた大規模変換APIは第2段階（指示書 §18.3）です。
+</details>
 
 ## QGISプラグイン
 
