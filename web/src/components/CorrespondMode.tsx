@@ -1,0 +1,372 @@
+/**
+ * モード2: セル対応確認（指示書 §9）。
+ * 基準セルと他方式セルとの包含・交差関係を表示する。
+ */
+
+import { useCallback, useEffect, useState } from "react";
+import { GridMap, GridLayerConfig } from "../map/GridMap";
+import { BackgroundSettings, SYSTEM_COLORS } from "../map/style";
+import { getAdapter, availableSystems } from "../lib/adapters";
+import type { GridCell, GridSystem } from "../lib/types";
+import type { CorrespondenceResult } from "../lib/intersect";
+import { callWorker } from "../workers/client";
+import type { AppState } from "../lib/urlState";
+import { downloadText } from "../lib/download";
+import { formatArea } from "../lib/geo";
+
+interface TargetConfig {
+  system: GridSystem;
+  level: number | string;
+  enabled: boolean;
+}
+
+interface Props {
+  bg: BackgroundSettings;
+  urlState: AppState;
+  onViewChange: (lng: number, lat: number, zoom: number) => void;
+  onStateChange: (patch: Partial<AppState>) => void;
+}
+
+export function CorrespondMode({ bg, urlState, onViewChange, onStateChange }: Props) {
+  const [baseConfig, setBaseConfig] = useState<GridLayerConfig>({
+    system: urlState.baseSystem,
+    level: urlState.baseLevel,
+    visible: true,
+    lineOpacity: 0.95,
+    fillOpacity: 0,
+    showLabels: true,
+  });
+  const [targets, setTargets] = useState<TargetConfig[]>(
+    availableSystems()
+      .filter((a) => a.system !== urlState.baseSystem)
+      .map((a) => ({
+        system: a.system,
+        level: a.defaultLevel,
+        enabled: a.system === "h3",
+      }))
+  );
+  const [baseCell, setBaseCell] = useState<GridCell | null>(null);
+  const [results, setResults] = useState<CorrespondenceResult[]>([]);
+  const [idInput, setIdInput] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const runCorrespondence = useCallback(
+    (cell: GridCell, currentTargets: TargetConfig[]) => {
+      const enabled = currentTargets.filter((t) => t.enabled);
+      if (!enabled.length) {
+        setResults([]);
+        return;
+      }
+      setBusy(true);
+      callWorker<{ base: GridCell; results: CorrespondenceResult[] }>({
+        type: "correspondence",
+        baseSystem: cell.system,
+        baseId: cell.id,
+        targets: enabled.map((t) => ({ system: t.system, level: t.level })),
+      })
+        .then((res) => {
+          setResults(res.results);
+          setError(null);
+        })
+        .catch((e: Error) => setError(e.message))
+        .finally(() => setBusy(false));
+    },
+    []
+  );
+
+  const selectCell = useCallback(
+    (cell: GridCell) => {
+      setBaseCell(cell);
+      onStateChange({ selectedId: cell.id, baseSystem: cell.system });
+      runCorrespondence(cell, targets);
+    },
+    [targets, runCorrespondence, onStateChange]
+  );
+
+  const handleClick = useCallback(
+    (lng: number, lat: number) => {
+      try {
+        const cell = getAdapter(baseConfig.system).pointToCell(
+          lng,
+          lat,
+          baseConfig.level
+        );
+        setError(null);
+        selectCell(cell);
+      } catch (e) {
+        setError(e instanceof Error ? e.message : String(e));
+      }
+    },
+    [baseConfig, selectCell]
+  );
+
+  const handleIdInput = () => {
+    if (!idInput.trim()) return;
+    // 貼り付けられたIDの方式を自動判別（指示書 §9.3）
+    for (const adapter of [
+      getAdapter(baseConfig.system),
+      ...availableSystems(),
+    ]) {
+      try {
+        const cell = adapter.cellToGeometry(idInput.trim());
+        setBaseConfig((c) => ({ ...c, system: cell.system, level: cell.level }));
+        setError(null);
+        selectCell(cell);
+        return;
+      } catch {
+        // 次のアダプターを試す
+      }
+    }
+    setError(`指定されたセルIDは無効です: ${idInput}`);
+  };
+
+  // ターゲット変更時に再計算
+  useEffect(() => {
+    if (baseCell) runCorrespondence(baseCell, targets);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [targets]);
+
+  // URL の選択セル復元
+  useEffect(() => {
+    if (urlState.selectedId && !baseCell) {
+      try {
+        const cell = getAdapter(urlState.baseSystem).cellToGeometry(
+          urlState.selectedId
+        );
+        selectCell(cell);
+      } catch {
+        // 無効なIDは無視
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const overlayCells = results.flatMap((r) =>
+    r.targetCells.map((cell, i) => ({
+      cell,
+      kind:
+        r.intersections[i].relation === "contains" ||
+        r.intersections[i].relation === "equal"
+          ? ("within" as const)
+          : ("boundary" as const),
+      color: SYSTEM_COLORS[r.targetSystem],
+    }))
+  );
+
+  const exportCsv = () => {
+    if (!results.length) return;
+    const header =
+      "source_system,source_id,target_system,target_id,intersection_area_m2,source_ratio,target_ratio,relation";
+    const rows = results.flatMap((r) =>
+      r.intersections.map((ix) =>
+        [
+          ix.sourceSystem,
+          ix.sourceId,
+          ix.targetSystem,
+          ix.targetId,
+          ix.intersectionAreaM2.toFixed(2),
+          ix.sourceRatio.toFixed(6),
+          ix.targetRatio.toFixed(6),
+          ix.relation,
+        ].join(",")
+      )
+    );
+    downloadText("correspondence.csv", [header, ...rows].join("\n"), "text/csv");
+  };
+
+  const exportGeoJson = () => {
+    if (!results.length) return;
+    const features = results.flatMap((r) =>
+      r.targetCells.map((cell, i) => ({
+        type: "Feature" as const,
+        geometry: cell.geometry,
+        properties: { ...r.intersections[i] },
+      }))
+    );
+    downloadText(
+      "correspondence.geojson",
+      JSON.stringify({ type: "FeatureCollection", features }, null, 2),
+      "application/geo+json"
+    );
+  };
+
+  return (
+    <div className="correspond-mode">
+      <div className="side-panel">
+        <h3>基準グリッド</h3>
+        <select
+          value={baseConfig.system}
+          onChange={(e) => {
+            const system = e.target.value as GridSystem;
+            setBaseConfig((c) => ({
+              ...c,
+              system,
+              level: getAdapter(system).defaultLevel,
+            }));
+            setTargets(
+              availableSystems()
+                .filter((a) => a.system !== system)
+                .map((a) => ({
+                  system: a.system,
+                  level: a.defaultLevel,
+                  enabled: false,
+                }))
+            );
+            setBaseCell(null);
+            setResults([]);
+          }}
+        >
+          {availableSystems().map((a) => (
+            <option key={a.system} value={a.system}>
+              {a.displayName}
+            </option>
+          ))}
+        </select>
+        <select
+          value={String(baseConfig.level)}
+          onChange={(e) => {
+            const raw = e.target.value;
+            const asNum = Number(raw);
+            setBaseConfig((c) => ({
+              ...c,
+              level: isNaN(asNum) || String(asNum) !== raw ? raw : asNum,
+            }));
+            setBaseCell(null);
+            setResults([]);
+          }}
+        >
+          {getAdapter(baseConfig.system).levels.map((lv) => (
+            <option key={String(lv.value)} value={String(lv.value)}>
+              {lv.label}
+            </option>
+          ))}
+        </select>
+        <div className="id-input">
+          <input
+            placeholder="セルIDを入力・貼り付け"
+            value={idInput}
+            onChange={(e) => setIdInput(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && handleIdInput()}
+          />
+          <button onClick={handleIdInput}>選択</button>
+        </div>
+        {baseCell && (
+          <div className="base-cell-info">
+            <div className="mono">{baseCell.id}</div>
+            <div>面積: {formatArea(baseCell.areaM2)}</div>
+          </div>
+        )}
+        <h3>比較対象</h3>
+        {targets.map((t, i) => (
+          <div key={t.system} className="target-row">
+            <label className="row">
+              <input
+                type="checkbox"
+                checked={t.enabled}
+                onChange={(e) => {
+                  const next = [...targets];
+                  next[i] = { ...t, enabled: e.target.checked };
+                  setTargets(next);
+                }}
+              />
+              <span
+                className="color-chip"
+                style={{ background: SYSTEM_COLORS[t.system] }}
+              />
+              {getAdapter(t.system).displayName}
+            </label>
+            <select
+              value={String(t.level)}
+              onChange={(e) => {
+                const raw = e.target.value;
+                const asNum = Number(raw);
+                const next = [...targets];
+                next[i] = {
+                  ...t,
+                  level: isNaN(asNum) || String(asNum) !== raw ? raw : asNum,
+                };
+                setTargets(next);
+              }}
+            >
+              {getAdapter(t.system).levels.map((lv) => (
+                <option key={String(lv.value)} value={String(lv.value)}>
+                  {lv.label}
+                </option>
+              ))}
+            </select>
+          </div>
+        ))}
+        {busy && <p className="hint">交差計算中...</p>}
+        {error && <div className="error-bar">{error}</div>}
+        <div className="legend">
+          <h4>凡例</h4>
+          <div><span className="legend-line solid" /> 通常セル（枠線のみ）</div>
+          <div><span className="legend-line bold" /> 基準セル（太線＋薄い塗り）</div>
+          <div><span className="legend-line fill" /> 完全包含セル（薄い塗り）</div>
+          <div><span className="legend-line dashed" /> 境界交差セル（破線）</div>
+        </div>
+        <div className="export-row">
+          <button onClick={exportCsv} disabled={!results.length}>
+            CSV出力
+          </button>
+          <button onClick={exportGeoJson} disabled={!results.length}>
+            GeoJSON出力
+          </button>
+        </div>
+        {results.map((r) => (
+          <div key={r.targetSystem} className="result-block">
+            <h4>
+              <span
+                className="color-chip"
+                style={{ background: SYSTEM_COLORS[r.targetSystem] }}
+              />
+              {getAdapter(r.targetSystem).displayName}
+            </h4>
+            <table className="info-table small">
+              <tbody>
+                <tr><td>交差セル数</td><td>{r.intersectCount}</td></tr>
+                <tr><td>完全包含</td><td>{r.containedCount}</td></tr>
+                <tr><td>境界交差</td><td>{r.boundaryCount}</td></tr>
+                <tr><td>面積比合計</td><td>{(r.ratioSum * 100).toFixed(2)}%</td></tr>
+                <tr><td>計算誤差</td><td>{(r.ratioError * 100).toFixed(4)}%</td></tr>
+              </tbody>
+            </table>
+            <details>
+              <summary>面積構成（上位10セル）</summary>
+              <table className="info-table small">
+                <tbody>
+                  {[...r.intersections]
+                    .sort((a, b) => b.sourceRatio - a.sourceRatio)
+                    .slice(0, 10)
+                    .map((ix) => (
+                      <tr key={ix.targetId}>
+                        <td className="mono">{ix.targetId}</td>
+                        <td>{(ix.sourceRatio * 100).toFixed(1)}%</td>
+                        <td>{ix.relation}</td>
+                      </tr>
+                    ))}
+                </tbody>
+              </table>
+            </details>
+          </div>
+        ))}
+      </div>
+      <div className="map-single">
+        <GridMap
+          bg={bg}
+          layer={baseConfig}
+          selectedCell={baseCell}
+          overlayCells={overlayCells}
+          initialView={{ lng: urlState.lng, lat: urlState.lat, zoom: urlState.zoom }}
+          onClick={handleClick}
+          onMove={(m) => {
+            const c = m.getCenter();
+            onViewChange(c.lng, c.lat, m.getZoom());
+          }}
+          onError={setError}
+        />
+      </div>
+    </div>
+  );
+}
