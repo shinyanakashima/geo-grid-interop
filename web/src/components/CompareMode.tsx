@@ -49,6 +49,8 @@ export function CompareMode({ bg, urlState, onViewChange, onStateChange }: Props
     showLabels: true,
   });
   const [areaMatch, setAreaMatch] = useState(urlState.areaMatch);
+  const [viewMode, setViewMode] = useState<"swipe" | "side">(urlState.view);
+  const isSwipe = viewMode === "swipe";
   const [split, setSplit] = useState(urlState.splitRatio);
   const [leftCell, setLeftCell] = useState<GridCell | null>(null);
   const [rightCell, setRightCell] = useState<GridCell | null>(null);
@@ -116,8 +118,9 @@ export function CompareMode({ bg, urlState, onViewChange, onStateChange }: Props
       rightLevel: String(rightConfig.level),
       areaMatch,
       splitRatio: split,
+      view: viewMode,
     });
-  }, [leftConfig.system, leftConfig.level, rightConfig.system, rightConfig.level, areaMatch, split, onStateChange]);
+  }, [leftConfig.system, leftConfig.level, rightConfig.system, rightConfig.level, areaMatch, split, viewMode, onStateChange]);
 
   // 中央スライダーのドラッグ（指示書 §8.5）
   const containerRef = useRef<HTMLDivElement>(null);
@@ -144,10 +147,19 @@ export function CompareMode({ bg, urlState, onViewChange, onStateChange }: Props
     };
   }, []);
 
+  // 左右並列モードでは幅変更に、スワイプ⇔並列切替では常にリサイズが必要。
+  // スワイプ中は地図サイズが変わらないためリサイズ不要（clip-pathのみ更新）。
+  useEffect(() => {
+    if (!isSwipe) {
+      leftRef.current?.map?.resize();
+      rightRef.current?.map?.resize();
+    }
+  }, [split, isSwipe]);
+
   useEffect(() => {
     leftRef.current?.map?.resize();
     rightRef.current?.map?.resize();
-  }, [split]);
+  }, [viewMode]);
 
   const exportCsv = () => {
     const cells = [leftCell, rightCell].filter(Boolean) as GridCell[];
@@ -197,6 +209,22 @@ export function CompareMode({ bg, urlState, onViewChange, onStateChange }: Props
           />
           面積一致（右レベル自動選択）
         </label>
+        <div className="view-toggle" role="group" aria-label="比較方式">
+          <button
+            className={isSwipe ? "tab active" : "tab"}
+            onClick={() => setViewMode("swipe")}
+            title="1つの地図を比較線で区切って左右のグリッドを表示"
+          >
+            スワイプ
+          </button>
+          <button
+            className={!isSwipe ? "tab active" : "tab"}
+            onClick={() => setViewMode("side")}
+            title="2つの地図を並べて同期表示"
+          >
+            左右並列
+          </button>
+        </div>
         <button onClick={exportCsv} disabled={!leftCell && !rightCell}>
           CSV出力
         </button>
@@ -205,8 +233,23 @@ export function CompareMode({ bg, urlState, onViewChange, onStateChange }: Props
         </button>
       </div>
       {error && <div className="error-bar">{error}</div>}
-      <div className="split-container" ref={containerRef}>
-        <div className="map-pane" style={{ width: `${split * 100}%` }}>
+      <div
+        className={isSwipe ? "swipe-container" : "split-container"}
+        ref={containerRef}
+      >
+        <div
+          className="map-pane"
+          style={
+            isSwipe
+              ? {
+                  position: "absolute",
+                  inset: 0,
+                  width: "100%",
+                  clipPath: `inset(0 ${(1 - split) * 100}% 0 0)`,
+                }
+              : { width: `${split * 100}%` }
+          }
+        >
           <GridMap
             ref={leftRef}
             bg={bg}
@@ -216,23 +259,36 @@ export function CompareMode({ bg, urlState, onViewChange, onStateChange }: Props
             onClick={handleClick}
             onMove={(m) => syncFrom(m, rightRef)}
             onError={setError}
-            cursor={cursorR}
+            cursor={isSwipe ? null : cursorR}
             onCursor={(lng, lat) => setCursorL({ lng, lat })}
           />
           {leftCell && (
             <div className="map-badge">
-              {leftCell.id}（{formatArea(leftCell.areaM2)}）
+              左: {leftCell.id}（{formatArea(leftCell.areaM2)}）
             </div>
           )}
         </div>
         <div
-          className="split-handle"
+          className={isSwipe ? "swipe-handle" : "split-handle"}
+          style={isSwipe ? { left: `calc(${split * 100}% - 2px)` } : undefined}
           onMouseDown={() => {
             draggingRef.current = true;
           }}
-          title="ドラッグして左右の幅を変更"
+          title="ドラッグして比較位置を変更"
         />
-        <div className="map-pane" style={{ width: `${(1 - split) * 100}%` }}>
+        <div
+          className="map-pane"
+          style={
+            isSwipe
+              ? {
+                  position: "absolute",
+                  inset: 0,
+                  width: "100%",
+                  clipPath: `inset(0 0 0 ${split * 100}%)`,
+                }
+              : { width: `${(1 - split) * 100}%` }
+          }
+        >
           <GridMap
             ref={rightRef}
             bg={bg}
@@ -242,12 +298,12 @@ export function CompareMode({ bg, urlState, onViewChange, onStateChange }: Props
             onClick={handleClick}
             onMove={(m) => syncFrom(m, leftRef)}
             onError={setError}
-            cursor={cursorL}
+            cursor={isSwipe ? null : cursorL}
             onCursor={(lng, lat) => setCursorR({ lng, lat })}
           />
           {rightCell && (
-            <div className="map-badge">
-              {rightCell.id}（{formatArea(rightCell.areaM2)}）
+            <div className={isSwipe ? "map-badge badge-right" : "map-badge"}>
+              右: {rightCell.id}（{formatArea(rightCell.areaM2)}）
             </div>
           )}
         </div>

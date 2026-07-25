@@ -6,6 +6,8 @@ import type { GridSystem } from "./types";
 
 export interface AppState {
   mode: "compare" | "correspond" | "convert";
+  /** 比較モードの表示方式: swipe=1画面を比較線で区切る / side=2画面並列 */
+  view: "swipe" | "side";
   lng: number;
   lat: number;
   zoom: number;
@@ -23,6 +25,7 @@ export interface AppState {
 
 export const DEFAULT_STATE: AppState = {
   mode: "compare",
+  view: "swipe",
   lng: 143.196,
   lat: 42.923, // 帯広（指示書 §17 テスト地点）
   zoom: 12,
@@ -49,6 +52,7 @@ export function readStateFromUrl(): AppState {
   const str = <T extends string>(key: string, fallback: T): T =>
     (params.get(key) as T) ?? fallback;
   state.mode = str("mode", state.mode);
+  state.view = str("view", state.view) === "side" ? "side" : "swipe";
   state.lng = num("lng", state.lng);
   state.lat = num("lat", state.lat);
   state.zoom = num("z", state.zoom);
@@ -68,6 +72,7 @@ export function readStateFromUrl(): AppState {
 export function writeStateToUrl(state: AppState): void {
   const params = new URLSearchParams();
   params.set("mode", state.mode);
+  params.set("view", state.view);
   params.set("lng", state.lng.toFixed(6));
   params.set("lat", state.lat.toFixed(6));
   params.set("z", state.zoom.toFixed(2));

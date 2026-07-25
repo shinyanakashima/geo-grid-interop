@@ -120,6 +120,54 @@ button.primary {
   position: relative;
 }
 
+/* スワイプ比較: 同期した2つの地図を重ね、clip-pathで比較線の左右に分ける */
+.swipe-container {
+  flex: 1;
+  min-height: 0;
+  position: relative;
+  overflow: hidden;
+}
+
+.swipe-handle {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: #fff;
+  box-shadow: 0 0 4px rgba(0, 0, 0, 0.5);
+  cursor: ew-resize;
+  z-index: 10;
+}
+
+.swipe-handle::after {
+  content: "⇆";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: #fff;
+  border: 1px solid #bbb;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
+  color: #444;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.map-badge.badge-right {
+  left: auto;
+  right: 8px;
+}
+
+.view-toggle {
+  display: flex;
+  gap: 2px;
+}
+
 .map-pane {
   position: relative;
   height: 100%;
