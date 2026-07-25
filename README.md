@@ -75,10 +75,27 @@ Cloudflare Pages の GitHub 連携で本リポジトリを接続し、以下を�
 
 | 設定 | 値 |
 | --- | --- |
-| Build command | `cd web && npm ci && npm run build` |
-| Build output directory | `web/dist` |
+| Framework preset | `None`（または `Vite`） |
+| Root directory | `web` |
+| Build command | `npm ci && npm run build` |
+| Build output directory | `dist` |
+
+Root directory を設定しない場合は、Build command を
+`cd web && npm ci && npm run build`、Build output directory を `web/dist` にします。
+
+**環境変数**: アプリ側の環境変数・APIキーは不要です（完全静的サイトで、
+地理院タイルは公開URLへ直接アクセス）。ビルド環境のNodeバージョンを
+固定したい場合のみ `NODE_VERSION=22` を設定してください。
 
 Pull Request ごとの Preview 環境が自動で発行されます。
+
+GitHub連携を使わず手元からデプロイする場合（`wrangler login` 済みの環境）:
+
+```bash
+cd web
+npm run deploy   # build + wrangler pages deploy dist
+```
+
 Workers / R2 / D1 / Queues を用いた大規模変換APIは第2段階（指示書 §18.3）です。
 
 ## QGISプラグイン

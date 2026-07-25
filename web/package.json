@@ -8,7 +8,8 @@
     "build": "tsc -b && vite build",
     "preview": "vite preview",
     "test": "vitest run",
-    "generate-testcases": "vite-node scripts/generate-testcases.ts"
+    "generate-testcases": "vite-node scripts/generate-testcases.ts",
+    "deploy": "npm run build && npx wrangler pages deploy dist --project-name geo-grid-interop"
   },
   "dependencies": {
     "h3-js": "^4.1.0",
