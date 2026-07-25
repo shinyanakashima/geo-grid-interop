@@ -1,0 +1,16 @@
+[general]
+name=Grid Interoperability
+qgisMinimumVersion=3.22
+description=地域標準メッシュ・H3・XYZタイル等の空間グリッドを生成・変換・按分する相互運用ツール
+about=地域標準メッシュ（JIS X 0410）を中心に、H3・XYZタイル・空間IDとの間でグリッド生成、セルID付与、対応表作成、面積按分を行います。Grid interoperability tools centered on the Japanese regional standard mesh (JIS X 0410), connecting it to H3, XYZ tiles and Spatial ID.
+version=0.1.0
+author=geo-grid-interop project
+email=s.nakashima@zukosha.co.jp
+tracker=https://github.com/shinyanakashima/geo-grid-interop/issues
+repository=https://github.com/shinyanakashima/geo-grid-interop
+tags=grid,mesh,h3,jismesh,xyz,spatial id,interoperability
+category=Vector
+icon=
+experimental=True
+deprecated=False
+hasProcessingProvider=yes

@@ -1,0 +1,461 @@
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  margin: 0;
+  height: 100%;
+  font-family: "Hiragino Sans", "Noto Sans JP", Meiryo, sans-serif;
+  font-size: 14px;
+  color: #222;
+}
+
+.app {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 6px 12px;
+  border-bottom: 1px solid #ddd;
+  background: #fafafa;
+  flex-wrap: wrap;
+}
+
+.header h1 {
+  font-size: 16px;
+  margin: 0;
+  white-space: nowrap;
+}
+
+.header nav {
+  display: flex;
+  gap: 4px;
+}
+
+.header-right {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.tab {
+  border: 1px solid #ccc;
+  background: #fff;
+  padding: 4px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.tab.active {
+  background: #1e88e5;
+  color: #fff;
+  border-color: #1e88e5;
+}
+
+button {
+  font: inherit;
+  padding: 4px 10px;
+  border: 1px solid #bbb;
+  border-radius: 4px;
+  background: #fff;
+  cursor: pointer;
+}
+
+button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+button.primary {
+  background: #1e88e5;
+  border-color: #1e88e5;
+  color: #fff;
+}
+
+.main {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* --- 比較モード --- */
+.compare-mode {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 6px 12px;
+  border-bottom: 1px solid #eee;
+  flex-wrap: wrap;
+}
+
+.grid-selector {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.grid-selector-label {
+  font-weight: bold;
+}
+
+.split-container {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  position: relative;
+}
+
+/* スワイプ比較: 同期した2つの地図を重ね、clip-pathで比較線の左右に分ける */
+.swipe-container {
+  flex: 1;
+  min-height: 0;
+  position: relative;
+  overflow: hidden;
+}
+
+.swipe-handle {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: #fff;
+  box-shadow: 0 0 4px rgba(0, 0, 0, 0.5);
+  cursor: ew-resize;
+  z-index: 10;
+}
+
+.swipe-handle::after {
+  content: "⇆";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: #fff;
+  border: 1px solid #bbb;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
+  color: #444;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.map-badge.badge-right {
+  left: auto;
+  right: 8px;
+}
+
+.view-toggle {
+  display: flex;
+  gap: 2px;
+}
+
+.map-pane {
+  position: relative;
+  height: 100%;
+}
+
+.map-container {
+  width: 100%;
+  height: 100%;
+}
+
+.split-handle {
+  width: 8px;
+  cursor: col-resize;
+  background: #ddd;
+  border-left: 1px solid #bbb;
+  border-right: 1px solid #bbb;
+  flex-shrink: 0;
+}
+
+.split-handle:hover {
+  background: #1e88e5;
+}
+
+.map-badge {
+  position: absolute;
+  left: 8px;
+  bottom: 24px;
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  padding: 2px 8px;
+  font-family: ui-monospace, monospace;
+  font-size: 12px;
+  pointer-events: none;
+}
+
+.bottom-panel {
+  max-height: 32vh;
+  overflow: auto;
+  border-top: 1px solid #ddd;
+  padding: 8px 12px;
+}
+
+.info-table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+.info-table th,
+.info-table td {
+  border: 1px solid #ddd;
+  padding: 3px 8px;
+  text-align: left;
+}
+
+.info-table th {
+  background: #f5f5f5;
+}
+
+.info-table.small {
+  font-size: 12px;
+}
+
+.mono {
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  word-break: break-all;
+}
+
+.hint {
+  color: #666;
+  font-size: 12px;
+}
+
+.error-bar {
+  background: #fdecea;
+  color: #b71c1c;
+  padding: 4px 12px;
+  font-size: 13px;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+}
+
+label {
+  display: block;
+  margin: 4px 0;
+}
+
+select,
+input[type="text"],
+input,
+textarea {
+  font: inherit;
+}
+
+.inline-details {
+  position: relative;
+}
+
+.inline-details summary {
+  cursor: pointer;
+  color: #1e88e5;
+  font-size: 12px;
+}
+
+.inline-details[open] {
+  background: #fff;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  padding: 6px;
+  position: absolute;
+  z-index: 20;
+  min-width: 200px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.panel-section summary {
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.panel-section[open] {
+  position: absolute;
+  right: 90px;
+  top: 40px;
+  z-index: 30;
+  background: #fff;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  padding: 8px 12px;
+  min-width: 240px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.cursor-marker {
+  width: 14px;
+  height: 14px;
+  border: 2px solid #1e88e5;
+  border-radius: 50%;
+  background: rgba(30, 136, 229, 0.25);
+  pointer-events: none;
+}
+
+/* --- 対応確認モード --- */
+.correspond-mode {
+  display: flex;
+  height: 100%;
+  min-height: 0;
+}
+
+.side-panel {
+  width: 320px;
+  flex-shrink: 0;
+  overflow-y: auto;
+  border-right: 1px solid #ddd;
+  padding: 10px 12px;
+}
+
+.side-panel h3 {
+  margin: 10px 0 6px;
+  font-size: 14px;
+}
+
+.side-panel h4 {
+  margin: 8px 0 4px;
+  font-size: 13px;
+}
+
+.side-panel select {
+  width: 100%;
+  margin-bottom: 4px;
+}
+
+.map-single {
+  flex: 1;
+  min-width: 0;
+}
+
+.id-input {
+  display: flex;
+  gap: 4px;
+  margin: 6px 0;
+}
+
+.id-input input {
+  flex: 1;
+  min-width: 0;
+}
+
+.base-cell-info {
+  background: #f5f5f5;
+  border-radius: 4px;
+  padding: 6px 8px;
+  margin: 6px 0;
+}
+
+.target-row {
+  margin-bottom: 6px;
+}
+
+.color-chip {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border-radius: 2px;
+  margin-right: 4px;
+}
+
+.legend {
+  margin: 10px 0;
+  font-size: 12px;
+}
+
+.legend-line {
+  display: inline-block;
+  width: 28px;
+  height: 0;
+  margin-right: 6px;
+  vertical-align: middle;
+}
+
+.legend-line.solid {
+  border-top: 1.5px solid #555;
+}
+
+.legend-line.bold {
+  border-top: 3px solid #555;
+}
+
+.legend-line.dashed {
+  border-top: 2px dashed #555;
+}
+
+.legend-line.fill {
+  height: 12px;
+  background: rgba(85, 85, 85, 0.2);
+  border: 1px solid #555;
+}
+
+.export-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 8px 0;
+}
+
+.result-block {
+  border-top: 1px solid #eee;
+  padding-top: 6px;
+  margin-top: 8px;
+}
+
+/* --- 変換モード --- */
+.convert-mode {
+  display: flex;
+  height: 100%;
+  min-height: 0;
+}
+
+.convert-form {
+  width: 340px;
+  flex-shrink: 0;
+  overflow-y: auto;
+  border-right: 1px solid #ddd;
+  padding: 10px 14px;
+}
+
+.convert-form h3 {
+  margin: 12px 0 6px;
+  font-size: 14px;
+}
+
+.convert-form select,
+.convert-form textarea {
+  width: 100%;
+}
+
+.convert-result {
+  flex: 1;
+  min-width: 0;
+  overflow: auto;
+  padding: 10px 14px;
+}
+
+.table-scroll {
+  overflow-x: auto;
+}

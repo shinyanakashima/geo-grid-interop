@@ -1,0 +1,435 @@
+{
+  "description": "Web版とQGIS版の計算結果整合性を確認する共通テストケース（指示書 §16）",
+  "generatedBy": "web/scripts/generate-testcases.ts",
+  "areaAlgorithm": "spherical-excess R=6371008.7714",
+  "cases": [
+    {
+      "name": "帯広",
+      "longitude": 143.196,
+      "latitude": 42.923,
+      "heightM": 0,
+      "expected": {
+        "jismesh": {
+          "level": "3",
+          "id": "64433105",
+          "areaM2": 943161.74,
+          "centerLon": 143.19375,
+          "centerLat": 42.920833333333334,
+          "parentId": "644331"
+        },
+        "h3": {
+          "level": 8,
+          "id": "882e1e6f09fffff",
+          "areaM2": 712355.14,
+          "centerLon": 143.19313926766165,
+          "centerLat": 42.92074224391207,
+          "parentId": "872e1e6f0ffffff"
+        },
+        "xyz": {
+          "level": 14,
+          "id": "14/14709/6025",
+          "areaM2": 3201651.24,
+          "centerLon": 143.206787109375,
+          "centerLat": 42.916205912915615,
+          "parentId": "13/7354/3012"
+        },
+        "spatial-id": {
+          "level": 14,
+          "id": "/14/0/14709/6025",
+          "areaM2": 3201651.24,
+          "centerLon": 143.206787109375,
+          "centerLat": 42.916205912915615,
+          "parentId": "/13/0/7354/3012"
+        }
+      }
+    },
+    {
+      "name": "札幌",
+      "longitude": 141.3544,
+      "latitude": 43.0621,
+      "heightM": 0,
+      "expected": {
+        "jismesh": {
+          "level": "3",
+          "id": "64414278",
+          "areaM2": 940990.24,
+          "centerLon": 141.35625,
+          "centerLat": 43.0625,
+          "parentId": "644142"
+        },
+        "h3": {
+          "level": 8,
+          "id": "882e1b56bdfffff",
+          "areaM2": 691977.53,
+          "centerLon": 141.35841501605654,
+          "centerLat": 43.06504577662501,
+          "parentId": "872e1b56bffffff"
+        },
+        "xyz": {
+          "level": 14,
+          "id": "14/14625/6016",
+          "areaM2": 3186617.22,
+          "centerLon": 141.361083984375,
+          "centerLat": 43.06086084589877,
+          "parentId": "13/7312/3008"
+        },
+        "spatial-id": {
+          "level": 14,
+          "id": "/14/0/14625/6016",
+          "areaM2": 3186617.22,
+          "centerLon": 141.361083984375,
+          "centerLat": 43.06086084589877,
+          "parentId": "/13/0/7312/3008"
+        }
+      }
+    },
+    {
+      "name": "東京駅",
+      "longitude": 139.767125,
+      "latitude": 35.681236,
+      "heightM": 0,
+      "expected": {
+        "jismesh": {
+          "level": "3",
+          "id": "53394611",
+          "areaM2": 1046198.37,
+          "centerLon": 139.76874999999998,
+          "centerLat": 35.679166666666674,
+          "parentId": "533946"
+        },
+        "h3": {
+          "level": 8,
+          "id": "882f5a32d9fffff",
+          "areaM2": 677998.9,
+          "centerLon": 139.76882831649672,
+          "centerLat": 35.68292360549723,
+          "parentId": "872f5a32dffffff"
+        },
+        "xyz": {
+          "level": 14,
+          "id": "14/14552/6451",
+          "areaM2": 3938321.17,
+          "centerLon": 139.757080078125,
+          "centerLat": 35.68407103409173,
+          "parentId": "13/7276/3225"
+        },
+        "spatial-id": {
+          "level": 14,
+          "id": "/14/0/14552/6451",
+          "areaM2": 3938321.17,
+          "centerLon": 139.757080078125,
+          "centerLat": 35.68407103409173,
+          "parentId": "/13/0/7276/3225"
+        }
+      }
+    },
+    {
+      "name": "那覇",
+      "longitude": 127.6809,
+      "latitude": 26.2124,
+      "heightM": 0,
+      "expected": {
+        "jismesh": {
+          "level": "3",
+          "id": "39272554",
+          "areaM2": 1155502.24,
+          "centerLon": 127.68124999999999,
+          "centerLat": 26.212500000000002,
+          "parentId": "392725"
+        },
+        "h3": {
+          "level": 8,
+          "id": "884a261969fffff",
+          "areaM2": 681199.87,
+          "centerLon": 127.68381117759883,
+          "centerLat": 26.211287742704478,
+          "parentId": "874a26196ffffff"
+        },
+        "xyz": {
+          "level": 14,
+          "id": "14/14002/6955",
+          "areaM2": 4805471.2,
+          "centerLon": 127.672119140625,
+          "centerLat": 26.204733849794764,
+          "parentId": "13/7001/3477"
+        },
+        "spatial-id": {
+          "level": 14,
+          "id": "/14/0/14002/6955",
+          "areaM2": 4805471.2,
+          "centerLon": 127.672119140625,
+          "centerLat": 26.204733849794764,
+          "parentId": "/13/0/7001/3477"
+        }
+      }
+    },
+    {
+      "name": "赤道付近",
+      "longitude": 104,
+      "latitude": 0.5,
+      "heightM": 0,
+      "expected": {
+        "jismesh": {
+          "level": "3",
+          "id": "00046000",
+          "areaM2": 1287902.82,
+          "centerLon": 104.00625,
+          "centerLat": 0.5041666666666667,
+          "parentId": "000460"
+        },
+        "h3": {
+          "level": 8,
+          "id": "88652401c7fffff",
+          "areaM2": 830573.17,
+          "centerLon": 103.99908399608827,
+          "centerLat": 0.5034215795771874,
+          "parentId": "87652401cffffff"
+        },
+        "xyz": {
+          "level": 14,
+          "id": "14/12925/8169",
+          "areaM2": 5969032.24,
+          "centerLon": 104.007568359375,
+          "centerLat": 0.49437862187499615,
+          "parentId": "13/6462/4084"
+        },
+        "spatial-id": {
+          "level": 14,
+          "id": "/14/0/12925/8169",
+          "areaM2": 5969032.24,
+          "centerLon": 104.007568359375,
+          "centerLat": 0.49437862187499615,
+          "parentId": "/13/0/6462/4084"
+        }
+      }
+    },
+    {
+      "name": "高緯度（緯度84.9度）",
+      "longitude": 20,
+      "latitude": 84.9,
+      "heightM": 0,
+      "expected": {
+        "jismesh": null,
+        "h3": {
+          "level": 8,
+          "id": "8800506749fffff",
+          "areaM2": 758901.5,
+          "centerLon": 19.98797101544783,
+          "centerLat": 84.89987164608381,
+          "parentId": "870050674ffffff"
+        },
+        "xyz": {
+          "level": 14,
+          "id": "14/9102/78",
+          "areaM2": 47170.54,
+          "centerLon": 20.006103515625,
+          "centerLat": 84.90007751911688,
+          "parentId": "13/4551/39"
+        },
+        "spatial-id": {
+          "level": 14,
+          "id": "/14/0/9102/78",
+          "areaM2": 47170.54,
+          "centerLon": 20.006103515625,
+          "centerLat": 84.90007751911688,
+          "parentId": "/13/0/4551/39"
+        }
+      }
+    },
+    {
+      "name": "国際日付変更線付近（東側）",
+      "longitude": 179.999,
+      "latitude": 52,
+      "heightM": 0,
+      "expected": {
+        "jismesh": {
+          "level": "3",
+          "id": "78790709",
+          "areaM2": 792869.04,
+          "centerLon": 179.99375,
+          "centerLat": 52.00416666666667,
+          "parentId": "787907"
+        },
+        "h3": {
+          "level": 8,
+          "id": "881659acc9fffff",
+          "areaM2": 753081.57,
+          "centerLon": -179.99781118657503,
+          "centerLat": 51.99849868789264,
+          "parentId": "871659accffffff"
+        },
+        "xyz": {
+          "level": 14,
+          "id": "14/16383/5411",
+          "areaM2": 2262141.79,
+          "centerLon": 179.989013671875,
+          "centerLat": 52.00517345957197,
+          "parentId": "13/8191/2705"
+        },
+        "spatial-id": {
+          "level": 14,
+          "id": "/14/0/16383/5411",
+          "areaM2": 2262141.79,
+          "centerLon": 179.989013671875,
+          "centerLat": 52.00517345957197,
+          "parentId": "/13/0/8191/2705"
+        }
+      }
+    },
+    {
+      "name": "国際日付変更線付近（西側）",
+      "longitude": -179.999,
+      "latitude": 52,
+      "heightM": 0,
+      "expected": {
+        "jismesh": null,
+        "h3": {
+          "level": 8,
+          "id": "881659acc9fffff",
+          "areaM2": 753081.57,
+          "centerLon": -179.99781118657503,
+          "centerLat": 51.99849868789264,
+          "parentId": "871659accffffff"
+        },
+        "xyz": {
+          "level": 14,
+          "id": "14/0/5411",
+          "areaM2": 2262141.79,
+          "centerLon": -179.989013671875,
+          "centerLat": 52.00517345957197,
+          "parentId": "13/0/2705"
+        },
+        "spatial-id": {
+          "level": 14,
+          "id": "/14/0/0/5411",
+          "areaM2": 2262141.79,
+          "centerLon": -179.989013671875,
+          "centerLat": 52.00517345957197,
+          "parentId": "/13/0/0/2705"
+        }
+      }
+    },
+    {
+      "name": "3次メッシュ境界上",
+      "longitude": 143.2,
+      "latitude": 42.925,
+      "heightM": 0,
+      "expected": {
+        "jismesh": {
+          "level": "3",
+          "id": "64433116",
+          "areaM2": 943034.16,
+          "centerLon": 143.20624999999998,
+          "centerLat": 42.92916666666667,
+          "parentId": "644331"
+        },
+        "h3": {
+          "level": 8,
+          "id": "882e1e6f0dfffff",
+          "areaM2": 712397.1,
+          "centerLon": 143.19937665032,
+          "centerLat": 42.927779109665984,
+          "parentId": "872e1e6f0ffffff"
+        },
+        "xyz": {
+          "level": 14,
+          "id": "14/14709/6024",
+          "areaM2": 3199979.31,
+          "centerLon": 143.206787109375,
+          "centerLat": 42.932295493751255,
+          "parentId": "13/7354/3012"
+        },
+        "spatial-id": {
+          "level": 14,
+          "id": "/14/0/14709/6024",
+          "areaM2": 3199979.31,
+          "centerLon": 143.206787109375,
+          "centerLat": 42.932295493751255,
+          "parentId": "/13/0/7354/3012"
+        }
+      }
+    },
+    {
+      "name": "海上（太平洋）",
+      "longitude": 145,
+      "latitude": 40,
+      "heightM": 0,
+      "expected": {
+        "jismesh": {
+          "level": "3",
+          "id": "60450000",
+          "areaM2": 986568.79,
+          "centerLon": 145.00625,
+          "centerLat": 40.00416666666667,
+          "parentId": "604500"
+        },
+        "h3": {
+          "level": 8,
+          "id": "882e0609c1fffff",
+          "areaM2": 739375.03,
+          "centerLon": 144.9983003069835,
+          "centerLat": 40.002452464284026,
+          "parentId": "872e0609cffffff"
+        },
+        "xyz": {
+          "level": 14,
+          "id": "14/14791/6202",
+          "areaM2": 3502789.39,
+          "centerLon": 145.008544921875,
+          "centerLat": 40.00237141721941,
+          "parentId": "13/7395/3101"
+        },
+        "spatial-id": {
+          "level": 14,
+          "id": "/14/0/14791/6202",
+          "areaM2": 3502789.39,
+          "centerLon": 145.008544921875,
+          "centerLat": 40.00237141721941,
+          "parentId": "/13/0/7395/3101"
+        }
+      }
+    },
+    {
+      "name": "空間ID鉛直: 地上0m",
+      "longitude": 139.767125,
+      "latitude": 35.681236,
+      "heightM": 0,
+      "expected": {
+        "spatial-id": {
+          "level": 14,
+          "id": "/14/0/14552/6451",
+          "minHeightM": 0,
+          "maxHeightM": 2048
+        }
+      }
+    },
+    {
+      "name": "空間ID鉛直: 高高度10000m",
+      "longitude": 139.767125,
+      "latitude": 35.681236,
+      "heightM": 10000,
+      "expected": {
+        "spatial-id": {
+          "level": 14,
+          "id": "/14/4/14552/6451",
+          "minHeightM": 8192,
+          "maxHeightM": 10240
+        }
+      }
+    },
+    {
+      "name": "空間ID鉛直: 地下（-50m）",
+      "longitude": 139.767125,
+      "latitude": 35.681236,
+      "heightM": -50,
+      "expected": {
+        "spatial-id": {
+          "level": 14,
+          "id": "/14/-1/14552/6451",
+          "minHeightM": -2048,
+          "maxHeightM": 0
+        }
+      }
+    }
+  ]
+}
