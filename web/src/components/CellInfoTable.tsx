@@ -3,6 +3,7 @@
 import type { GridCell } from "../lib/types";
 import { distanceM, formatArea, formatLength } from "../lib/geo";
 import { getAdapter } from "../lib/adapters";
+import { SYSTEM_COLORS } from "../map/style";
 
 interface Props {
   left: GridCell | null;
@@ -70,8 +71,28 @@ export function CellInfoTable({ left, right, clickPoint }: Props) {
       <thead>
         <tr>
           <th>項目</th>
-          <th>左</th>
-          <th>右</th>
+          <th>
+            <span className="th-chip">
+              {left && (
+                <span
+                  className="color-chip"
+                  style={{ background: SYSTEM_COLORS[left.system] }}
+                />
+              )}
+              左
+            </span>
+          </th>
+          <th>
+            <span className="th-chip">
+              {right && (
+                <span
+                  className="color-chip"
+                  style={{ background: SYSTEM_COLORS[right.system] }}
+                />
+              )}
+              右
+            </span>
+          </th>
         </tr>
       </thead>
       <tbody>

@@ -47,7 +47,24 @@ export default function App() {
   return (
     <div className="app">
       <header className="header">
-        <h1>空間グリッド比較・変換基盤</h1>
+        <div className="brand">
+          <svg className="brand-mark" viewBox="0 0 26 26" aria-hidden="true">
+            <rect x="1" y="1" width="24" height="24" rx="5" fill="#2563eb" />
+            <path
+              d="M9 1v24 M17 1v24 M1 9h24 M1 17h24"
+              stroke="rgba(255,255,255,.55)"
+              strokeWidth="1.4"
+            />
+            <path
+              d="M13 5.5l6.1 3.6v7.3L13 20.5l-6.1-4.1V9.1z"
+              fill="none"
+              stroke="#fff"
+              strokeWidth="1.8"
+              strokeLinejoin="round"
+            />
+          </svg>
+          <h1>空間グリッド比較・変換基盤</h1>
+        </div>
         <nav>
           {MODES.map((m) => (
             <button
