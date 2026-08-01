@@ -334,6 +334,12 @@ export function ConvertMode() {
             GeoJSON出力
           </button>
         </div>
+        {records.length === 0 && !busy && (
+          <div className="empty-state">
+            <p>変換元セルと変換先グリッドを指定して「変換を実行」すると、
+            対応関係と按分結果がここに表示されます。</p>
+          </div>
+        )}
         {records.length > 0 && (
           <div className="table-scroll">
             <table className="info-table small">

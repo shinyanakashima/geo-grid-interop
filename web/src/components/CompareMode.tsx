@@ -6,7 +6,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { Map as MlMap } from "maplibre-gl";
 import { GridMap, GridMapHandle, GridLayerConfig } from "../map/GridMap";
-import { BackgroundSettings } from "../map/style";
+import { BackgroundSettings, SYSTEM_COLORS } from "../map/style";
 import { GridSelector } from "./GridSelector";
 import { CellInfoTable } from "./CellInfoTable";
 import { getAdapter } from "../lib/adapters";
@@ -201,13 +201,13 @@ export function CompareMode({ bg, urlState, onViewChange, onStateChange }: Props
           onChange={setRightConfig}
           levelDisabled={areaMatch}
         />
-        <label className="row">
+        <label className="row" title="左セルの面積に最も近い右グリッドのレベルを自動選択します">
           <input
             type="checkbox"
             checked={areaMatch}
             onChange={(e) => setAreaMatch(e.target.checked)}
           />
-          面積一致（右レベル自動選択）
+          面積一致
         </label>
         <div className="view-toggle" role="group" aria-label="比較方式">
           <button
@@ -225,12 +225,14 @@ export function CompareMode({ bg, urlState, onViewChange, onStateChange }: Props
             左右並列
           </button>
         </div>
-        <button onClick={exportCsv} disabled={!leftCell && !rightCell}>
-          CSV出力
-        </button>
-        <button onClick={exportGeoJson} disabled={!leftCell && !rightCell}>
-          GeoJSON出力
-        </button>
+        <div className="toolbar-actions">
+          <button onClick={exportCsv} disabled={!leftCell && !rightCell}>
+            CSV出力
+          </button>
+          <button onClick={exportGeoJson} disabled={!leftCell && !rightCell}>
+            GeoJSON出力
+          </button>
+        </div>
       </div>
       {error && <div className="error-bar">{error}</div>}
       <div
@@ -264,7 +266,11 @@ export function CompareMode({ bg, urlState, onViewChange, onStateChange }: Props
           />
           {leftCell && (
             <div className="map-badge">
-              左: {leftCell.id}（{formatArea(leftCell.areaM2)}）
+              <span
+                className="dot"
+                style={{ background: SYSTEM_COLORS[leftCell.system] }}
+              />
+              {leftCell.id}（{formatArea(leftCell.areaM2)}）
             </div>
           )}
         </div>
@@ -303,7 +309,11 @@ export function CompareMode({ bg, urlState, onViewChange, onStateChange }: Props
           />
           {rightCell && (
             <div className={isSwipe ? "map-badge badge-right" : "map-badge"}>
-              右: {rightCell.id}（{formatArea(rightCell.areaM2)}）
+              <span
+                className="dot"
+                style={{ background: SYSTEM_COLORS[rightCell.system] }}
+              />
+              {rightCell.id}（{formatArea(rightCell.areaM2)}）
             </div>
           )}
         </div>
