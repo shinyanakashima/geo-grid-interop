@@ -25,6 +25,22 @@
           "centerLat": 42.92074224391207,
           "parentId": "872e1e6f0ffffff"
         },
+        "s2": {
+          "level": 13,
+          "id": "5f739944",
+          "areaM2": 1100679.66,
+          "centerLon": 143.19671866148568,
+          "centerLat": 42.91901449716257,
+          "parentId": "5f73995"
+        },
+        "geohash": {
+          "level": 6,
+          "id": "xptu4t",
+          "areaM2": 546427.46,
+          "centerLon": 143.2012939453125,
+          "centerLat": 42.92083740234375,
+          "parentId": "xptu4"
+        },
         "xyz": {
           "level": 14,
           "id": "14/14709/6025",
@@ -64,6 +80,22 @@
           "centerLon": 141.35841501605654,
           "centerLat": 43.06504577662501,
           "parentId": "872e1b56bffffff"
+        },
+        "s2": {
+          "level": 13,
+          "id": "5f0b299c",
+          "areaM2": 1111122.6,
+          "centerLon": 141.34650450880142,
+          "centerLat": 43.06179643112871,
+          "parentId": "5f0b299"
+        },
+        "geohash": {
+          "level": 6,
+          "id": "xpssbx",
+          "areaM2": 545159.11,
+          "centerLon": 141.3555908203125,
+          "centerLat": 43.06365966796875,
+          "parentId": "xpssb"
         },
         "xyz": {
           "level": 14,
@@ -105,6 +137,22 @@
           "centerLat": 35.68292360549723,
           "parentId": "872f5a32dffffff"
         },
+        "s2": {
+          "level": 13,
+          "id": "60188bfc",
+          "areaM2": 942850.67,
+          "centerLon": 139.76776378710514,
+          "centerLat": 35.68206626554799,
+          "parentId": "60188bf"
+        },
+        "geohash": {
+          "level": 6,
+          "id": "xn76ur",
+          "areaM2": 606109.74,
+          "centerLon": 139.7625732421875,
+          "centerLat": 35.68084716796875,
+          "parentId": "xn76u"
+        },
         "xyz": {
           "level": 14,
           "id": "14/14552/6451",
@@ -144,6 +192,22 @@
           "centerLon": 127.68381117759883,
           "centerLat": 26.211287742704478,
           "parentId": "874a26196ffffff"
+        },
+        "s2": {
+          "level": 13,
+          "id": "34e5699c",
+          "areaM2": 1186964.45,
+          "centerLon": 127.67590868162706,
+          "centerLat": 26.213814075461755,
+          "parentId": "34e5699"
+        },
+        "geohash": {
+          "level": 6,
+          "id": "wudv17",
+          "areaM2": 669459.22,
+          "centerLon": 127.6776123046875,
+          "centerLat": 26.21063232421875,
+          "parentId": "wudv1"
         },
         "xyz": {
           "level": 14,
@@ -185,6 +249,22 @@
           "centerLat": 0.5034215795771874,
           "parentId": "87652401cffffff"
         },
+        "s2": {
+          "level": 13,
+          "id": "31d8494c",
+          "areaM2": 1315795.55,
+          "centerLon": 104.0014307374246,
+          "centerLat": 0.496407340611504,
+          "parentId": "31d8495"
+        },
+        "geohash": {
+          "level": 6,
+          "id": "w21fye",
+          "areaM2": 746155.88,
+          "centerLon": 104.0020751953125,
+          "centerLat": 0.50262451171875,
+          "parentId": "w21fy"
+        },
         "xyz": {
           "level": 14,
           "id": "14/12925/8169",
@@ -217,6 +297,22 @@
           "centerLon": 19.98797101544783,
           "centerLat": 84.89987164608381,
           "parentId": "870050674ffffff"
+        },
+        "s2": {
+          "level": 13,
+          "id": "455d994c",
+          "areaM2": 1241991.78,
+          "centerLon": 20.002265630756234,
+          "centerLat": 84.89871325134403,
+          "parentId": "455d995"
+        },
+        "geohash": {
+          "level": 6,
+          "id": "urn4zp",
+          "areaM2": 66336.78,
+          "centerLon": 20.0006103515625,
+          "centerLat": 84.89959716796875,
+          "parentId": "urn4z"
         },
         "xyz": {
           "level": 14,
@@ -258,6 +354,22 @@
           "centerLat": 51.99849868789264,
           "parentId": "871659accffffff"
         },
+        "s2": {
+          "level": 13,
+          "id": "58277fdc",
+          "areaM2": 962114.19,
+          "centerLon": 179.9940326569361,
+          "centerLat": 51.995065373956535,
+          "parentId": "58277fd"
+        },
+        "geohash": {
+          "level": 6,
+          "id": "zcpzzf",
+          "areaM2": 459386.46,
+          "centerLon": 179.9945068359375,
+          "centerLat": 52.00103759765625,
+          "parentId": "zcpzz"
+        },
         "xyz": {
           "level": 14,
           "id": "14/16383/5411",
@@ -290,6 +402,22 @@
           "centerLon": -179.99781118657503,
           "centerLat": 51.99849868789264,
           "parentId": "871659accffffff"
+        },
+        "s2": {
+          "level": 13,
+          "id": "5789d564",
+          "areaM2": 962114.19,
+          "centerLon": -179.9940326569361,
+          "centerLat": 51.995065373956535,
+          "parentId": "5789d57"
+        },
+        "geohash": {
+          "level": 6,
+          "id": "b10pb4",
+          "areaM2": 459386.46,
+          "centerLon": -179.9945068359375,
+          "centerLat": 52.00103759765625,
+          "parentId": "b10pb"
         },
         "xyz": {
           "level": 14,
@@ -331,6 +459,22 @@
           "centerLat": 42.927779109665984,
           "parentId": "872e1e6f0ffffff"
         },
+        "s2": {
+          "level": 13,
+          "id": "5f73993c",
+          "areaM2": 1100797.65,
+          "centerLon": 143.20861019675087,
+          "centerLat": 42.923450364585136,
+          "parentId": "5f73993"
+        },
+        "geohash": {
+          "level": 6,
+          "id": "xptu4w",
+          "areaM2": 546378.74,
+          "centerLon": 143.2012939453125,
+          "centerLat": 42.92633056640625,
+          "parentId": "xptu4"
+        },
         "xyz": {
           "level": 14,
           "id": "14/14709/6024",
@@ -370,6 +514,22 @@
           "centerLon": 144.9983003069835,
           "centerLat": 40.002452464284026,
           "parentId": "872e0609cffffff"
+        },
+        "s2": {
+          "level": 13,
+          "id": "5f7f7a3c",
+          "areaM2": 988644.6,
+          "centerLon": 144.9949305981335,
+          "centerLat": 39.99957677099637,
+          "parentId": "5f7f7a3"
+        },
+        "geohash": {
+          "level": 6,
+          "id": "xpp5e9",
+          "areaM2": 571623.33,
+          "centerLon": 145.0030517578125,
+          "centerLat": 39.99847412109375,
+          "parentId": "xpp5e"
         },
         "xyz": {
           "level": 14,

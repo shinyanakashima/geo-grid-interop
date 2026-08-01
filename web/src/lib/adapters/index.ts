@@ -2,19 +2,21 @@
  * グリッドアダプターレジストリ。
  * 特定ライブラリへ依存しすぎないよう、共通インターフェース GridAdapter を
  * 介してのみ各グリッド実装へアクセスする（指示書 §4.2）。
- *
- * S2 / Geohash は第2段階（指示書 §18.3）で追加する。
  */
 
 import type { GridAdapter, GridSystem } from "../types";
 import { jismeshAdapter } from "./jismesh";
 import { h3Adapter } from "./h3";
+import { s2Adapter } from "./s2";
+import { geohashAdapter } from "./geohash";
 import { xyzAdapter } from "./xyz";
 import { spatialIdAdapter } from "./spatialid";
 
 const registry = new Map<GridSystem, GridAdapter>([
   ["jismesh", jismeshAdapter],
   ["h3", h3Adapter],
+  ["s2", s2Adapter],
+  ["geohash", geohashAdapter],
   ["xyz", xyzAdapter],
   ["spatial-id", spatialIdAdapter],
 ]);
@@ -31,4 +33,11 @@ export function availableSystems(): GridAdapter[] {
   return [...registry.values()];
 }
 
-export { jismeshAdapter, h3Adapter, xyzAdapter, spatialIdAdapter };
+export {
+  jismeshAdapter,
+  h3Adapter,
+  s2Adapter,
+  geohashAdapter,
+  xyzAdapter,
+  spatialIdAdapter,
+};
