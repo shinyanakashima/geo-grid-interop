@@ -14,10 +14,14 @@ import type { AppState } from "../lib/urlState";
 import { downloadText } from "../lib/download";
 import { formatArea } from "../lib/geo";
 
+type RelationFilter = "all" | "within" | "boundary";
+
 interface TargetConfig {
   system: GridSystem;
   level: number | string;
   enabled: boolean;
+  /** 表示する関係の絞り込み（指示書 §9.6） */
+  filter: RelationFilter;
 }
 
 interface Props {
@@ -43,6 +47,7 @@ export function CorrespondMode({ bg, urlState, onViewChange, onStateChange }: Pr
         system: a.system,
         level: a.defaultLevel,
         enabled: a.system === "h3",
+        filter: "all" as RelationFilter,
       }))
   );
   const [baseCell, setBaseCell] = useState<GridCell | null>(null);
@@ -222,17 +227,21 @@ export function CorrespondMode({ bg, urlState, onViewChange, onStateChange }: Pr
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const overlayCells = results.flatMap((r) =>
-    r.targetCells.map((cell, i) => ({
-      cell,
-      kind:
-        r.intersections[i].relation === "contains" ||
-        r.intersections[i].relation === "equal"
-          ? ("within" as const)
-          : ("boundary" as const),
-      color: SYSTEM_COLORS[r.targetSystem],
-    }))
-  );
+  const overlayCells = results.flatMap((r) => {
+    const filter =
+      targets.find((t) => t.system === r.targetSystem)?.filter ?? "all";
+    return r.targetCells
+      .map((cell, i) => ({
+        cell,
+        kind:
+          r.intersections[i].relation === "contains" ||
+          r.intersections[i].relation === "equal"
+            ? ("within" as const)
+            : ("boundary" as const),
+        color: SYSTEM_COLORS[r.targetSystem],
+      }))
+      .filter((o) => filter === "all" || o.kind === filter);
+  });
 
   const exportCsv = () => {
     if (!results.length) return;
@@ -291,6 +300,7 @@ export function CorrespondMode({ bg, urlState, onViewChange, onStateChange }: Pr
                   system: a.system,
                   level: a.defaultLevel,
                   enabled: false,
+                  filter: "all" as RelationFilter,
                 }))
             );
             setBaseCell(null);
@@ -404,6 +414,20 @@ export function CorrespondMode({ bg, urlState, onViewChange, onStateChange }: Pr
                 </option>
               ))}
             </select>
+            {t.enabled && (
+              <select
+                value={t.filter}
+                onChange={(e) => {
+                  const next = [...targets];
+                  next[i] = { ...t, filter: e.target.value as RelationFilter };
+                  setTargets(next);
+                }}
+              >
+                <option value="all">すべて表示</option>
+                <option value="within">完全包含セルのみ</option>
+                <option value="boundary">境界交差セルのみ</option>
+              </select>
+            )}
           </div>
         ))}
         {busy && <p className="hint">交差計算中...</p>}

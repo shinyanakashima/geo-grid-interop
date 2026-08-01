@@ -1,8 +1,9 @@
-/** グリッド方式・レベル・表示スタイルの選択（指示書 §8.6） */
+/** グリッド方式・レベル・表示スタイルの選択（指示書 §8.6, §9.6） */
 
 import { availableSystems, getAdapter } from "../lib/adapters";
 import type { GridSystem } from "../lib/types";
 import type { GridLayerConfig } from "../map/GridMap";
+import { SYSTEM_COLORS } from "../map/style";
 
 interface Props {
   label: string;
@@ -78,6 +79,35 @@ export function GridSelector({ label, config, onChange, levelDisabled }: Props) 
               onChange({ ...config, fillOpacity: parseFloat(e.target.value) })
             }
           />
+        </label>
+        <label>
+          線幅 {config.lineWidth ?? 1}px
+          <input
+            type="range"
+            min={0.5}
+            max={5}
+            step={0.5}
+            value={config.lineWidth ?? 1}
+            onChange={(e) =>
+              onChange({ ...config, lineWidth: parseFloat(e.target.value) })
+            }
+          />
+        </label>
+        <label className="row">
+          線色
+          <input
+            type="color"
+            value={config.lineColor ?? SYSTEM_COLORS[config.system]}
+            onChange={(e) => onChange({ ...config, lineColor: e.target.value })}
+          />
+          {config.lineColor && (
+            <button
+              className="mini"
+              onClick={() => onChange({ ...config, lineColor: undefined })}
+            >
+              標準色に戻す
+            </button>
+          )}
         </label>
         <label className="row">
           <input
