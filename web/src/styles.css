@@ -611,6 +611,36 @@ label {
   min-width: 0;
 }
 
+.geocode-results {
+  list-style: none;
+  margin: 4px 0 8px;
+  padding: 4px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
+}
+
+.geocode-results li + li {
+  border-top: 1px solid var(--border);
+}
+
+.geocode-results button.link {
+  display: block;
+  width: 100%;
+  text-align: left;
+  border: none;
+  background: none;
+  padding: 6px 8px;
+  color: var(--accent);
+  font-size: 12.5px;
+}
+
+.geocode-results button.link:hover {
+  background: var(--accent-soft);
+  border: none;
+}
+
 .base-cell-info {
   background: var(--accent-soft);
   border: 1px solid #dbeafe;
