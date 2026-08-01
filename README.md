@@ -11,13 +11,14 @@
 
 ## 対象グリッド
 
-| 方式 | Web GIS | QGISプラグイン | 状態 |
-| --- | --- | --- | --- |
-| 地域標準メッシュ（JIS X 0410） | ✅ | ✅ | MVP |
-| H3 | ✅ | ✅（要 `pip install h3`） | MVP |
-| XYZタイル | ✅ | ✅ | MVP |
-| 空間ID（ZFXY・水平+鉛直インデックス） | ✅ | ✅ | MVP |
-| S2 / Geohash | — | — | 第2段階 |
+| 方式 | Web GIS | QGISプラグイン |
+| --- | --- | --- |
+| 地域標準メッシュ（JIS X 0410） | ✅ | ✅ |
+| H3 | ✅ | ✅（要 `pip install h3`） |
+| S2 | ✅ | ✅（要 `pip install s2sphere`） |
+| Geohash | ✅ | ✅（純Python実装・依存なし） |
+| XYZタイル | ✅ | ✅ |
+| 空間ID（ZFXY・水平+鉛直インデックス） | ✅ | ✅ |
 
 ## リポジトリ構成
 
@@ -108,8 +109,17 @@ Viteの `base` は相対パス（`./`）とし、ルーティングはURLハッ�
   - グリッド間変換 — 重心割当・最大重複・完全包含・閾値指定など6方式
   - 属性値を面積按分 — 推計値フラグ・最大剰余法による整数配分対応
 - 出力は QGIS 標準の仕組みで GeoPackage / CSV 等へ保存できます。
-- H3 を使う場合は QGIS の Python 環境へ `pip install h3`（v4系）が必要です。
-  未インストールでも地域標準メッシュ・XYZ・空間IDの機能は動作します。
+- H3 は `pip install h3`（v4系）、S2 は `pip install s2sphere` が必要です。
+  未インストールでも他のグリッドの機能は動作します。
+
+### 配布用zipの作成
+
+```bash
+scripts/package_qgis_plugin.sh    # dist/grid_interoperability-<version>.zip
+```
+
+`v*` タグをpushするとGitHub Actionsがテスト→zip作成→Releasesへの添付まで
+自動で行います（`.github/workflows/release.yml`）。
 
 ### テスト（QGIS不要）
 
