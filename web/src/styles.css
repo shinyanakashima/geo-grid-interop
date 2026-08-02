@@ -677,6 +677,23 @@ label {
   font-weight: 500;
 }
 
+.target-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.order-buttons {
+  display: flex;
+  gap: 2px;
+}
+
+.row-group {
+  display: flex;
+  gap: 14px;
+  margin: 6px 0;
+}
+
 .color-chip {
   display: inline-block;
   width: 11px;

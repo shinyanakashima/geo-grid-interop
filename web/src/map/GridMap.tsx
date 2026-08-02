@@ -32,6 +32,10 @@ export interface GridLayerConfig {
   lineWidth?: number;
   /** 線色の上書き（未指定なら方式ごとの標準色） */
   lineColor?: string;
+  /** 選択セルの親セルを表示（指示書 §8.6） */
+  showParent?: boolean;
+  /** 選択セルの子セルを表示（指示書 §8.6） */
+  showChildren?: boolean;
 }
 
 export interface GridMapHandle {
@@ -44,6 +48,8 @@ interface Props {
   bg: BackgroundSettings;
   layer: GridLayerConfig;
   selectedCell?: GridCell | null;
+  parentCell?: GridCell | null;
+  childCells?: GridCell[];
   /** 追加の描画セル（対応確認モードの交差セルなど） */
   overlayCells?: { cell: GridCell; kind: "within" | "boundary"; color: string }[];
   initialView: { lng: number; lat: number; zoom: number };
@@ -75,6 +81,8 @@ export const GridMap = forwardRef<GridMapHandle, Props>(function GridMap(
     bg,
     layer,
     selectedCell,
+    parentCell,
+    childCells,
     overlayCells,
     initialView,
     onClick,
@@ -122,6 +130,8 @@ export const GridMap = forwardRef<GridMapHandle, Props>(function GridMap(
       "grid",
       "selected",
       "hover",
+      "parent",
+      "children",
       "overlay-within",
       "overlay-boundary",
     ]) {
@@ -162,6 +172,23 @@ export const GridMap = forwardRef<GridMapHandle, Props>(function GridMap(
       type: "line",
       source: "grid",
       paint: { "line-color": "#000000", "line-width": 1, "line-opacity": 0.95 },
+    });
+    // 選択セルの子セル（細線）と親セル（破線太線）
+    map.addLayer({
+      id: "children-line",
+      type: "line",
+      source: "children",
+      paint: { "line-color": "#000000", "line-width": 0.7, "line-opacity": 0.8 },
+    });
+    map.addLayer({
+      id: "parent-line",
+      type: "line",
+      source: "parent",
+      paint: {
+        "line-color": "#000000",
+        "line-width": 2,
+        "line-dasharray": [4, 2],
+      },
     });
     // マウスオーバー中のセルを一時強調（指示書 §9.7）
     map.addLayer({
@@ -307,6 +334,9 @@ export const GridMap = forwardRef<GridMapHandle, Props>(function GridMap(
     map.setPaintProperty("hover-fill", "fill-color", color);
     map.setPaintProperty("hover-line", "line-color", color);
     map.setPaintProperty("hover-line", "line-width", width + 1.5);
+    map.setPaintProperty("parent-line", "line-color", color);
+    map.setPaintProperty("parent-line", "line-width", width + 1);
+    map.setPaintProperty("children-line", "line-color", color);
     map.setLayoutProperty(
       "grid-label",
       "visibility",
@@ -322,6 +352,18 @@ export const GridMap = forwardRef<GridMapHandle, Props>(function GridMap(
       selectedCell ? cellsToFC([selectedCell]) : EMPTY_FC
     );
   }, [selectedCell, mapReady]);
+
+  // 親セル・子セルの反映（指示書 §8.6）
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !mapReady || !map.getSource("parent")) return;
+    (map.getSource("parent") as maplibregl.GeoJSONSource).setData(
+      parentCell ? cellsToFC([parentCell]) : EMPTY_FC
+    );
+    (map.getSource("children") as maplibregl.GeoJSONSource).setData(
+      childCells?.length ? cellsToFC(childCells) : EMPTY_FC
+    );
+  }, [parentCell, childCells, mapReady]);
 
   // 対応確認モードの交差セル描画
   useEffect(() => {

@@ -3,7 +3,7 @@
  * 2つの MapLibre インスタンスを同期し、左右で別グリッドを表示する。
  */
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { Map as MlMap } from "maplibre-gl";
 import { GridMap, GridMapHandle, GridLayerConfig } from "../map/GridMap";
 import { BackgroundSettings, SYSTEM_COLORS } from "../map/style";
@@ -58,6 +58,33 @@ export function CompareMode({ bg, urlState, onViewChange, onStateChange }: Props
   const [error, setError] = useState<string | null>(null);
   const [cursorL, setCursorL] = useState<{ lng: number; lat: number } | null>(null);
   const [cursorR, setCursorR] = useState<{ lng: number; lat: number } | null>(null);
+
+  // 親セル・子セル表示（指示書 §8.6）。子セルは表示上限を設ける
+  const MAX_CHILDREN = 128;
+  const usePedigree = (cell: GridCell | null, config: GridLayerConfig) =>
+    useMemo(() => {
+      let parent: GridCell | null = null;
+      let children: GridCell[] = [];
+      if (cell) {
+        const adapter = getAdapter(cell.system);
+        try {
+          if (config.showParent && cell.parentId) {
+            parent = adapter.cellToGeometry(cell.parentId);
+          }
+          if (config.showChildren) {
+            children = adapter
+              .getChildren(cell.id)
+              .slice(0, MAX_CHILDREN)
+              .map((id) => adapter.cellToGeometry(id));
+          }
+        } catch {
+          // 親子を取得できないセルは無視
+        }
+      }
+      return { parent, children };
+    }, [cell, config.showParent, config.showChildren]);
+  const leftPedigree = usePedigree(leftCell, leftConfig);
+  const rightPedigree = usePedigree(rightCell, rightConfig);
 
   // 地図同期（指示書 §8.3, §8.4）: 同期ロックで無限ループを防ぐ
   const syncFrom = useCallback((src: MlMap, dstRef: React.RefObject<GridMapHandle>) => {
@@ -257,6 +284,8 @@ export function CompareMode({ bg, urlState, onViewChange, onStateChange }: Props
             bg={bg}
             layer={leftConfig}
             selectedCell={leftCell}
+            parentCell={leftPedigree.parent}
+            childCells={leftPedigree.children}
             initialView={{ lng: urlState.lng, lat: urlState.lat, zoom: urlState.zoom }}
             onClick={handleClick}
             onMove={(m) => syncFrom(m, rightRef)}
@@ -300,6 +329,8 @@ export function CompareMode({ bg, urlState, onViewChange, onStateChange }: Props
             bg={bg}
             layer={rightConfig}
             selectedCell={rightCell}
+            parentCell={rightPedigree.parent}
+            childCells={rightPedigree.children}
             initialView={{ lng: urlState.lng, lat: urlState.lat, zoom: urlState.zoom }}
             onClick={handleClick}
             onMove={(m) => syncFrom(m, leftRef)}

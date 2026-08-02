@@ -122,6 +122,26 @@ export function GridSelector({ label, config, onChange, levelDisabled }: Props) 
         <label className="row">
           <input
             type="checkbox"
+            checked={config.showParent ?? false}
+            onChange={(e) =>
+              onChange({ ...config, showParent: e.target.checked })
+            }
+          />
+          親セル表示（破線）
+        </label>
+        <label className="row">
+          <input
+            type="checkbox"
+            checked={config.showChildren ?? false}
+            onChange={(e) =>
+              onChange({ ...config, showChildren: e.target.checked })
+            }
+          />
+          子セル表示（細線）
+        </label>
+        <label className="row">
+          <input
+            type="checkbox"
             checked={config.visible}
             onChange={(e) => onChange({ ...config, visible: e.target.checked })}
           />
