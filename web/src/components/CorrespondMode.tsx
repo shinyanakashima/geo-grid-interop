@@ -3,8 +3,8 @@
  * 基準セルと他方式セルとの包含・交差関係を表示する。
  */
 
-import { useCallback, useEffect, useState } from "react";
-import { GridMap, GridLayerConfig } from "../map/GridMap";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { GridMap, GridMapHandle, GridLayerConfig } from "../map/GridMap";
 import { BackgroundSettings, SYSTEM_COLORS } from "../map/style";
 import { getAdapter, availableSystems } from "../lib/adapters";
 import type { GridCell, GridSystem } from "../lib/types";
@@ -14,10 +14,14 @@ import type { AppState } from "../lib/urlState";
 import { downloadText } from "../lib/download";
 import { formatArea } from "../lib/geo";
 
+type RelationFilter = "all" | "within" | "boundary";
+
 interface TargetConfig {
   system: GridSystem;
   level: number | string;
   enabled: boolean;
+  /** 表示する関係の絞り込み（指示書 §9.6） */
+  filter: RelationFilter;
 }
 
 interface Props {
@@ -43,6 +47,7 @@ export function CorrespondMode({ bg, urlState, onViewChange, onStateChange }: Pr
         system: a.system,
         level: a.defaultLevel,
         enabled: a.system === "h3",
+        filter: "all" as RelationFilter,
       }))
   );
   const [baseCell, setBaseCell] = useState<GridCell | null>(null);
@@ -50,6 +55,12 @@ export function CorrespondMode({ bg, urlState, onViewChange, onStateChange }: Pr
   const [idInput, setIdInput] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const mapRef = useRef<GridMapHandle>(null);
+  const [geoQuery, setGeoQuery] = useState("");
+  const [geoResults, setGeoResults] = useState<
+    { title: string; lng: number; lat: number }[]
+  >([]);
+  const [geoBusy, setGeoBusy] = useState(false);
 
   const runCorrespondence = useCallback(
     (cell: GridCell, currentTargets: TargetConfig[]) => {
@@ -101,24 +112,98 @@ export function CorrespondMode({ bg, urlState, onViewChange, onStateChange }: Pr
     [baseConfig, selectCell]
   );
 
+  /** 指定地点の基準セルを選択して地図を移動する */
+  const selectAtPoint = useCallback(
+    (lng: number, lat: number) => {
+      try {
+        const cell = getAdapter(baseConfig.system).pointToCell(
+          lng,
+          lat,
+          baseConfig.level
+        );
+        setError(null);
+        selectCell(cell);
+        mapRef.current?.map?.flyTo({ center: [lng, lat], zoom: 13 });
+      } catch (e) {
+        setError(e instanceof Error ? e.message : String(e));
+      }
+    },
+    [baseConfig, selectCell]
+  );
+
   const handleIdInput = () => {
-    if (!idInput.trim()) return;
+    const text = idInput.trim();
+    if (!text) return;
+    // 緯度経度入力（例: "42.923, 143.196"）を判定（指示書 §9.3）
+    const coords = text.split(/[\s,、/]+/).map(Number);
+    if (coords.length === 2 && coords.every(isFinite)) {
+      const [a, b] = coords;
+      if (Math.abs(a) <= 90 && Math.abs(b) <= 180) {
+        selectAtPoint(b, a); // 緯度, 経度 の順とみなす
+      } else if (Math.abs(a) <= 180 && Math.abs(b) <= 90) {
+        selectAtPoint(a, b); // 経度, 緯度 の順とみなす
+      } else {
+        setError(`緯度経度として解釈できません: ${text}`);
+      }
+      return;
+    }
     // 貼り付けられたIDの方式を自動判別（指示書 §9.3）
     for (const adapter of [
       getAdapter(baseConfig.system),
       ...availableSystems(),
     ]) {
       try {
-        const cell = adapter.cellToGeometry(idInput.trim());
+        const cell = adapter.cellToGeometry(text);
         setBaseConfig((c) => ({ ...c, system: cell.system, level: cell.level }));
         setError(null);
         selectCell(cell);
+        mapRef.current?.map?.flyTo({ center: cell.center, zoom: 13 });
         return;
       } catch {
         // 次のアダプターを試す
       }
     }
     setError(`指定されたセルIDは無効です: ${idInput}`);
+  };
+
+  /** 現在地から基準セルを選択（指示書 §9.3） */
+  const useCurrentLocation = () => {
+    if (!navigator.geolocation) {
+      setError("この環境では現在地を取得できません");
+      return;
+    }
+    navigator.geolocation.getCurrentPosition(
+      (pos) => selectAtPoint(pos.coords.longitude, pos.coords.latitude),
+      () => setError("現在地を取得できませんでした")
+    );
+  };
+
+  /** 地名検索（国土地理院 住所検索API、指示書 §9.3） */
+  const searchPlace = () => {
+    const q = geoQuery.trim();
+    if (!q) return;
+    setGeoBusy(true);
+    fetch(
+      `https://msearch.gsi.go.jp/address-search/AddressSearch?q=${encodeURIComponent(q)}`
+    )
+      .then((r) => r.json())
+      .then(
+        (
+          data: { geometry: { coordinates: [number, number] }; properties: { title: string } }[]
+        ) => {
+          setGeoResults(
+            data.slice(0, 5).map((f) => ({
+              title: f.properties.title,
+              lng: f.geometry.coordinates[0],
+              lat: f.geometry.coordinates[1],
+            }))
+          );
+          if (!data.length) setError(`「${q}」は見つかりませんでした`);
+          else setError(null);
+        }
+      )
+      .catch(() => setError("地名検索に失敗しました"))
+      .finally(() => setGeoBusy(false));
   };
 
   // ターゲット変更時に再計算
@@ -142,17 +227,21 @@ export function CorrespondMode({ bg, urlState, onViewChange, onStateChange }: Pr
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const overlayCells = results.flatMap((r) =>
-    r.targetCells.map((cell, i) => ({
-      cell,
-      kind:
-        r.intersections[i].relation === "contains" ||
-        r.intersections[i].relation === "equal"
-          ? ("within" as const)
-          : ("boundary" as const),
-      color: SYSTEM_COLORS[r.targetSystem],
-    }))
-  );
+  const overlayCells = results.flatMap((r) => {
+    const filter =
+      targets.find((t) => t.system === r.targetSystem)?.filter ?? "all";
+    return r.targetCells
+      .map((cell, i) => ({
+        cell,
+        kind:
+          r.intersections[i].relation === "contains" ||
+          r.intersections[i].relation === "equal"
+            ? ("within" as const)
+            : ("boundary" as const),
+        color: SYSTEM_COLORS[r.targetSystem],
+      }))
+      .filter((o) => filter === "all" || o.kind === filter);
+  });
 
   const exportCsv = () => {
     if (!results.length) return;
@@ -211,6 +300,7 @@ export function CorrespondMode({ bg, urlState, onViewChange, onStateChange }: Pr
                   system: a.system,
                   level: a.defaultLevel,
                   enabled: false,
+                  filter: "all" as RelationFilter,
                 }))
             );
             setBaseCell(null);
@@ -244,13 +334,42 @@ export function CorrespondMode({ bg, urlState, onViewChange, onStateChange }: Pr
         </select>
         <div className="id-input">
           <input
-            placeholder="セルIDを入力・貼り付け"
+            placeholder="セルID / 緯度,経度 を入力"
             value={idInput}
             onChange={(e) => setIdInput(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && handleIdInput()}
           />
           <button onClick={handleIdInput}>選択</button>
         </div>
+        <div className="id-input">
+          <input
+            placeholder="地名・住所で検索"
+            value={geoQuery}
+            onChange={(e) => setGeoQuery(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && searchPlace()}
+          />
+          <button onClick={searchPlace} disabled={geoBusy}>
+            {geoBusy ? "検索中" : "検索"}
+          </button>
+        </div>
+        {geoResults.length > 0 && (
+          <ul className="geocode-results">
+            {geoResults.map((r, i) => (
+              <li key={i}>
+                <button
+                  className="link"
+                  onClick={() => {
+                    selectAtPoint(r.lng, r.lat);
+                    setGeoResults([]);
+                  }}
+                >
+                  {r.title}
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+        <button onClick={useCurrentLocation}>📍 現在地から選択</button>
         {baseCell && (
           <div className="base-cell-info">
             <div className="mono">{baseCell.id}</div>
@@ -295,6 +414,20 @@ export function CorrespondMode({ bg, urlState, onViewChange, onStateChange }: Pr
                 </option>
               ))}
             </select>
+            {t.enabled && (
+              <select
+                value={t.filter}
+                onChange={(e) => {
+                  const next = [...targets];
+                  next[i] = { ...t, filter: e.target.value as RelationFilter };
+                  setTargets(next);
+                }}
+              >
+                <option value="all">すべて表示</option>
+                <option value="within">完全包含セルのみ</option>
+                <option value="boundary">境界交差セルのみ</option>
+              </select>
+            )}
           </div>
         ))}
         {busy && <p className="hint">交差計算中...</p>}
@@ -354,6 +487,7 @@ export function CorrespondMode({ bg, urlState, onViewChange, onStateChange }: Pr
       </div>
       <div className="map-single">
         <GridMap
+          ref={mapRef}
           bg={bg}
           layer={baseConfig}
           selectedCell={baseCell}

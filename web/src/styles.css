@@ -195,6 +195,20 @@ input[type="checkbox"] {
   height: 15px;
 }
 
+input[type="color"] {
+  padding: 0;
+  width: 34px;
+  height: 24px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+
+button.mini {
+  padding: 1px 8px;
+  font-size: 11.5px;
+}
+
 label {
   display: block;
   margin: 8px 0;
@@ -609,6 +623,36 @@ label {
 .id-input input {
   flex: 1;
   min-width: 0;
+}
+
+.geocode-results {
+  list-style: none;
+  margin: 4px 0 8px;
+  padding: 4px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
+}
+
+.geocode-results li + li {
+  border-top: 1px solid var(--border);
+}
+
+.geocode-results button.link {
+  display: block;
+  width: 100%;
+  text-align: left;
+  border: none;
+  background: none;
+  padding: 6px 8px;
+  color: var(--accent);
+  font-size: 12.5px;
+}
+
+.geocode-results button.link:hover {
+  background: var(--accent-soft);
+  border: none;
 }
 
 .base-cell-info {

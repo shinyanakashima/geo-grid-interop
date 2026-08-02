@@ -16,7 +16,7 @@ sys.path.insert(
 )
 
 from grid_interoperability.adapters import available_systems, get_adapter  # noqa: E402
-from grid_interoperability.adapters import jismesh, xyz, spatial_id  # noqa: E402
+from grid_interoperability.adapters import geohash, jismesh, spatial_id, xyz  # noqa: E402
 from grid_interoperability.core.geometry import polygon_area_m2  # noqa: E402
 
 TESTCASES = os.path.abspath(
@@ -140,6 +140,73 @@ class TestSpatialId(unittest.TestCase):
     def test_underground(self):
         cell = spatial_id.point_to_cell(143.196, 42.923, 14, -50)
         self.assertTrue(cell.id.startswith("/14/-1/"))
+
+
+class TestGeohash(unittest.TestCase):
+    def test_tokyo_station(self):
+        cell = geohash.point_to_cell(139.767125, 35.681236, 6)
+        self.assertEqual(cell.id, "xn76ur")
+
+    def test_roundtrip_random_points(self):
+        """decode_bbox の中心を再エンコードすると同じハッシュに戻る."""
+        import itertools
+
+        for lat, lon in itertools.product(
+            (-77.5, -33.87, 0.0, 35.681236, 64.13), (-158.0, -0.1, 116.4, 139.767, 179.9)
+        ):
+            for precision in (4, 6, 8):
+                h = geohash.encode(lat, lon, precision)
+                min_lat, min_lon, max_lat, max_lon = geohash.decode_bbox(h)
+                self.assertLessEqual(min_lat, lat)
+                self.assertLessEqual(lat, max_lat)
+                self.assertLessEqual(min_lon, lon)
+                self.assertLessEqual(lon, max_lon)
+                self.assertEqual(
+                    geohash.encode(
+                        (min_lat + max_lat) / 2, (min_lon + max_lon) / 2, precision
+                    ),
+                    h,
+                )
+
+    def test_parent_children_neighbors(self):
+        cell = geohash.point_to_cell(143.196, 42.923, 6)
+        self.assertEqual(geohash.get_parent(cell.id), cell.id[:-1])
+        self.assertEqual(len(geohash.get_children(cell.id)), 32)
+        self.assertEqual(len(geohash.get_neighbors(cell.id)), 8)
+
+    def test_invalid(self):
+        with self.assertRaises(ValueError):
+            geohash.cell_to_geometry("ai_lo")
+
+
+class TestS2(unittest.TestCase):
+    def setUp(self):
+        if "s2" not in available_systems():
+            self.skipTest("s2sphere なし")
+
+    def test_tokyo_token(self):
+        s2 = get_adapter("s2")
+        cell = s2.point_to_cell(139.767125, 35.681236, 13)
+        self.assertEqual(cell.id, "60188bfc")
+        self.assertEqual(cell.level, 13)
+
+    def test_parent_children_neighbors(self):
+        s2 = get_adapter("s2")
+        cell = s2.point_to_cell(143.196, 42.923, 13)
+        parent = s2.get_parent(cell.id)
+        self.assertIn(cell.id, s2.get_children(parent))
+        self.assertEqual(len(s2.get_neighbors(cell.id)), 4)
+
+    def test_ratio_sum_jismesh_to_s2(self):
+        try:
+            import shapely  # noqa: F401
+        except ImportError:
+            self.skipTest("shapely なし")
+        from grid_interoperability.core.intersections import compute_correspondence
+
+        base = jismesh.point_to_cell(139.767125, 35.681236, "3")
+        _ix, _cells, stats = compute_correspondence(base, "s2", 13)
+        self.assertAlmostEqual(stats["ratio_sum"], 1.0, places=3)
 
 
 class TestGeometry(unittest.TestCase):

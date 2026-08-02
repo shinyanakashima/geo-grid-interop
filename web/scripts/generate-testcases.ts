@@ -47,6 +47,8 @@ for (const p of points) {
   for (const { system, level } of [
     { system: "jismesh" as const, level: "3" },
     { system: "h3" as const, level: 8 },
+    { system: "s2" as const, level: 13 },
+    { system: "geohash" as const, level: 6 },
     { system: "xyz" as const, level: 14 },
     { system: "spatial-id" as const, level: 14 },
   ]) {

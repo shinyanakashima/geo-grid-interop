@@ -16,8 +16,8 @@ from qgis.PyQt.QtCore import QVariant
 from ..core.models import GridCell
 
 # UI表示順のグリッド方式（Processingのenumインデックスと対応）
-SYSTEM_KEYS = ["jismesh", "h3", "xyz", "spatial-id"]
-SYSTEM_LABELS = ["地域標準メッシュ", "H3", "XYZタイル", "空間ID"]
+SYSTEM_KEYS = ["jismesh", "h3", "s2", "geohash", "xyz", "spatial-id"]
+SYSTEM_LABELS = ["地域標準メッシュ", "H3", "S2", "Geohash", "XYZタイル", "空間ID"]
 
 WGS84 = QgsCoordinateReferenceSystem("EPSG:4326")
 

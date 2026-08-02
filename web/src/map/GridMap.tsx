@@ -28,6 +28,10 @@ export interface GridLayerConfig {
   lineOpacity: number;
   fillOpacity: number;
   showLabels: boolean;
+  /** 線幅 [px]（既定 1） */
+  lineWidth?: number;
+  /** 線色の上書き（未指定なら方式ごとの標準色） */
+  lineColor?: string;
 }
 
 export interface GridMapHandle {
@@ -114,7 +118,13 @@ export const GridMap = forwardRef<GridMapHandle, Props>(function GridMap(
   }, []);
 
   function addGridLayers(map: MlMap) {
-    for (const src of ["grid", "selected", "overlay-within", "overlay-boundary"]) {
+    for (const src of [
+      "grid",
+      "selected",
+      "hover",
+      "overlay-within",
+      "overlay-boundary",
+    ]) {
       if (!map.getSource(src)) {
         map.addSource(src, { type: "geojson", data: EMPTY_FC });
       }
@@ -152,6 +162,19 @@ export const GridMap = forwardRef<GridMapHandle, Props>(function GridMap(
       type: "line",
       source: "grid",
       paint: { "line-color": "#000000", "line-width": 1, "line-opacity": 0.95 },
+    });
+    // マウスオーバー中のセルを一時強調（指示書 §9.7）
+    map.addLayer({
+      id: "hover-fill",
+      type: "fill",
+      source: "hover",
+      paint: { "fill-color": "#000000", "fill-opacity": 0.08 },
+    });
+    map.addLayer({
+      id: "hover-line",
+      type: "line",
+      source: "hover",
+      paint: { "line-color": "#000000", "line-width": 2.5 },
     });
     map.addLayer({
       id: "selected-fill",
@@ -271,13 +294,19 @@ export const GridMap = forwardRef<GridMapHandle, Props>(function GridMap(
   useEffect(() => {
     const map = mapRef.current;
     if (!map || !mapReady || !map.getLayer("grid-line")) return;
-    const color = SYSTEM_COLORS[layer.system];
+    const color = layer.lineColor ?? SYSTEM_COLORS[layer.system];
+    const width = layer.lineWidth ?? 1;
     map.setPaintProperty("grid-line", "line-color", color);
+    map.setPaintProperty("grid-line", "line-width", width);
     map.setPaintProperty("grid-line", "line-opacity", layer.lineOpacity);
     map.setPaintProperty("grid-fill", "fill-color", color);
     map.setPaintProperty("grid-fill", "fill-opacity", layer.fillOpacity);
     map.setPaintProperty("selected-fill", "fill-color", color);
     map.setPaintProperty("selected-line", "line-color", color);
+    map.setPaintProperty("selected-line", "line-width", width + 2);
+    map.setPaintProperty("hover-fill", "fill-color", color);
+    map.setPaintProperty("hover-line", "line-color", color);
+    map.setPaintProperty("hover-line", "line-width", width + 1.5);
     map.setLayoutProperty(
       "grid-label",
       "visibility",
@@ -321,15 +350,30 @@ export const GridMap = forwardRef<GridMapHandle, Props>(function GridMap(
     const clickHandler = (e: maplibregl.MapMouseEvent) =>
       onClick?.(e.lngLat.lng, e.lngLat.lat);
     const moveHandler = () => onMove?.(map);
-    const mouseHandler = (e: maplibregl.MapMouseEvent) =>
+    const setHover = (feature: GeoJSON.Feature | null) => {
+      const src = map.getSource("hover") as maplibregl.GeoJSONSource | undefined;
+      src?.setData(
+        feature ? { type: "FeatureCollection", features: [feature] } : EMPTY_FC
+      );
+    };
+    const mouseHandler = (e: maplibregl.MapMouseEvent) => {
       onCursor?.(e.lngLat.lng, e.lngLat.lat);
+      if (!map.getLayer("grid-fill")) return;
+      const features = map.queryRenderedFeatures(e.point, {
+        layers: ["grid-fill"],
+      });
+      setHover(features[0] ?? null);
+    };
+    const leaveHandler = () => setHover(null);
     map.on("click", clickHandler);
     map.on("move", moveHandler);
     map.on("mousemove", mouseHandler);
+    map.getCanvas().addEventListener("mouseleave", leaveHandler);
     return () => {
       map.off("click", clickHandler);
       map.off("move", moveHandler);
       map.off("mousemove", mouseHandler);
+      map.getCanvas()?.removeEventListener("mouseleave", leaveHandler);
     };
   }, [onClick, onMove, onCursor, mapReady]);
 

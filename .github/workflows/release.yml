@@ -1,0 +1,28 @@
+name: Release QGIS plugin
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Run plugin tests
+        run: |
+          pip install shapely h3 s2sphere pytest
+          pytest qgis-plugin -q
+      - name: Package plugin
+        run: scripts/package_qgis_plugin.sh dist
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/grid_interoperability-*.zip
+          generate_release_notes: true

@@ -31,5 +31,5 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-      - run: pip install shapely h3 pytest
+      - run: pip install shapely h3 s2sphere pytest
       - run: pytest qgis-plugin -q

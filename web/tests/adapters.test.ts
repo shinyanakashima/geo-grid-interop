@@ -3,6 +3,8 @@ import { jismeshAdapter, toMeshCode, codeToSouthWest } from "../src/lib/adapters
 import { xyzAdapter } from "../src/lib/adapters/xyz";
 import { spatialIdAdapter } from "../src/lib/adapters/spatialid";
 import { h3Adapter } from "../src/lib/adapters/h3";
+import { s2Adapter } from "../src/lib/adapters/s2";
+import { geohashAdapter } from "../src/lib/adapters/geohash";
 import { computeCorrespondence, levelByAreaMatch } from "../src/lib/intersect";
 import { convertCell, applyRounding } from "../src/lib/convert";
 import { polygonAreaM2 } from "../src/lib/geo";
@@ -126,6 +128,74 @@ describe("h3", () => {
   });
 });
 
+describe("s2", () => {
+  it("東京駅 level 13 のトークン（s2sphereと一致する既知値）", () => {
+    const cell = s2Adapter.pointToCell(TOKYO.lon, TOKYO.lat, 13);
+    expect(cell.id).toBe("60188bfc");
+    expect(cell.level).toBe(13);
+  });
+
+  it("トークンの往復と親子関係", () => {
+    const cell = s2Adapter.pointToCell(OBIHIRO.lon, OBIHIRO.lat, 13);
+    const rebuilt = s2Adapter.cellToGeometry(cell.id);
+    expect(rebuilt.areaM2).toBeCloseTo(cell.areaM2, 5);
+    const parent = s2Adapter.getParent(cell.id)!;
+    expect(s2Adapter.getChildren(parent)).toContain(cell.id);
+    expect(s2Adapter.getNeighbors(cell.id)).toHaveLength(4);
+  });
+
+  it("level 13 の面積が約1km²前後", () => {
+    const cell = s2Adapter.pointToCell(TOKYO.lon, TOKYO.lat, 13);
+    expect(cell.areaM2).toBeGreaterThan(0.5e6);
+    expect(cell.areaM2).toBeLessThan(2e6);
+  });
+
+  it("境界リングが閉じている", () => {
+    const cell = s2Adapter.pointToCell(TOKYO.lon, TOKYO.lat, 13);
+    const ring = cell.geometry.coordinates[0] as [number, number][];
+    expect(ring[0]).toEqual(ring[ring.length - 1]);
+  });
+
+  it("cellsForBounds が範囲を被覆する", () => {
+    const base = jismeshAdapter.pointToCell(TOKYO.lon, TOKYO.lat, "3");
+    const [minLon, minLat] = (base.geometry.coordinates[0] as [number, number][])[0];
+    const cells = s2Adapter.cellsForBounds(
+      [minLon, minLat, minLon + 1 / 80, minLat + 1 / 120],
+      13
+    );
+    expect(cells.length).toBeGreaterThan(0);
+    // クリック地点のセルが含まれる
+    const target = s2Adapter.pointToCell(TOKYO.lon, TOKYO.lat, 13);
+    expect(cells.map((c) => c.id)).toContain(target.id);
+  });
+});
+
+describe("geohash", () => {
+  it("東京駅 length 6", () => {
+    const cell = geohashAdapter.pointToCell(TOKYO.lon, TOKYO.lat, 6);
+    expect(cell.id).toBe("xn76ur");
+    expect(cell.level).toBe(6);
+  });
+
+  it("親子・隣接関係", () => {
+    const cell = geohashAdapter.pointToCell(OBIHIRO.lon, OBIHIRO.lat, 6);
+    expect(geohashAdapter.getParent(cell.id)).toBe(cell.id.slice(0, 5));
+    expect(geohashAdapter.getChildren(cell.id)).toHaveLength(32);
+    expect(geohashAdapter.getNeighbors(cell.id)).toHaveLength(8);
+  });
+
+  it("無効なIDでエラー", () => {
+    expect(() => geohashAdapter.cellToGeometry("ai_lo")).toThrow();
+  });
+
+  it("3次メッシュ × Geohash 6 の面積比合計が約100%", () => {
+    const base = jismeshAdapter.pointToCell(TOKYO.lon, TOKYO.lat, "3");
+    const result = computeCorrespondence(base, "geohash", 6);
+    expect(result.ratioSum).toBeGreaterThan(0.999);
+    expect(result.ratioSum).toBeLessThan(1.001);
+  });
+});
+
 describe("intersect / correspondence", () => {
   it("3次メッシュ × H3 res8 の面積比合計が約100%", () => {
     const base = jismeshAdapter.pointToCell(OBIHIRO.lon, OBIHIRO.lat, "3");
@@ -141,6 +211,14 @@ describe("intersect / correspondence", () => {
   it("3次メッシュ × XYZ z14 の面積比合計が約100%", () => {
     const base = jismeshAdapter.pointToCell(TOKYO.lon, TOKYO.lat, "3");
     const result = computeCorrespondence(base, "xyz", 14);
+    expect(result.ratioSum).toBeGreaterThan(0.999);
+    expect(result.ratioSum).toBeLessThan(1.001);
+  });
+
+  it("3次メッシュ × S2 level 13 の面積比合計が約100%", () => {
+    const base = jismeshAdapter.pointToCell(TOKYO.lon, TOKYO.lat, "3");
+    const result = computeCorrespondence(base, "s2", 13);
+    expect(result.intersectCount).toBeGreaterThan(0);
     expect(result.ratioSum).toBeGreaterThan(0.999);
     expect(result.ratioSum).toBeLessThan(1.001);
   });
