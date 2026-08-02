@@ -103,6 +103,8 @@ export interface GridAdapter {
 
   cellsForBounds(
     bounds: [number, number, number, number],
-    level: number | string
+    level: number | string,
+    /** 高さを持つグリッド（空間ID）でのみ使用。基準は楕円体高 [m] */
+    heightM?: number
   ): GridCell[];
 }

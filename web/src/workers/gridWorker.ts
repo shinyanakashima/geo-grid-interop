@@ -16,6 +16,8 @@ export type WorkerRequest =
       level: number | string;
       bounds: [number, number, number, number];
       maxCells: number;
+      /** 空間IDの鉛直位置（楕円体高 [m]） */
+      heightM?: number;
     }
   | {
       type: "correspondence";
@@ -58,7 +60,11 @@ self.onmessage = (ev: MessageEvent<WorkerMessage>) => {
 function handle(req: WorkerRequest): unknown {
   switch (req.type) {
     case "cells": {
-      const cells = getAdapter(req.system).cellsForBounds(req.bounds, req.level);
+      const cells = getAdapter(req.system).cellsForBounds(
+        req.bounds,
+        req.level,
+        req.heightM ?? 0
+      );
       if (cells.length > req.maxCells) {
         throw new Error(
           `現在の範囲ではセル数が多すぎます（${cells.length} > ${req.maxCells}）。解像度を下げてください。`

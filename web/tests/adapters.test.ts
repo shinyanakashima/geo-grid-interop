@@ -104,6 +104,27 @@ describe("spatial-id", () => {
     expect(sid.id.startsWith("/14/1/")).toBe(true);
     expect(sid.minHeightM).toBe(2048);
     expect(sid.maxHeightM).toBe(4096);
+    expect(sid.metadata?.f).toBe(1);
+  });
+
+  it("cellsForBounds が指定高度のボクセルを返す", () => {
+    const cells = spatialIdAdapter.cellsForBounds(
+      [143.19, 42.92, 143.2, 42.93],
+      14,
+      3000
+    );
+    expect(cells.length).toBeGreaterThan(0);
+    for (const c of cells) {
+      expect(c.id.startsWith("/14/1/")).toBe(true);
+      expect(c.minHeightM).toBe(2048);
+    }
+  });
+
+  it("地下（負の高度）のボクセル", () => {
+    const sid = spatialIdAdapter.pointToCell(OBIHIRO.lon, OBIHIRO.lat, 14, -50);
+    expect(sid.id.startsWith("/14/-1/")).toBe(true);
+    expect(sid.minHeightM).toBe(-2048);
+    expect(sid.maxHeightM).toBe(0);
   });
 });
 

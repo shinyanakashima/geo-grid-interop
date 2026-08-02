@@ -13,7 +13,8 @@ import type {
 } from "../lib/convert";
 import { recordsToCsv, recordsToGeoJson } from "../lib/convert";
 import { callWorker } from "../workers/client";
-import { downloadText } from "../lib/download";
+import { downloadBinary, downloadText } from "../lib/download";
+import { writeParquetFile } from "../lib/parquet";
 
 const METHOD_LABELS: Record<ConversionMethod, string> = {
   centroid: "重心割当",
@@ -85,7 +86,21 @@ export function ConvertMode() {
   const [rounding, setRounding] = useState<RoundingMethod>("none");
   const [records, setRecords] = useState<ConversionRecord[]>([]);
   const [busy, setBusy] = useState(false);
+  const [parquetBusy, setParquetBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const exportParquet = (includeGeometry: boolean) => {
+    setParquetBusy(true);
+    writeParquetFile(records, includeGeometry)
+      .then((bytes) =>
+        downloadBinary(
+          includeGeometry ? "conversion.geoparquet.parquet" : "conversion.parquet",
+          bytes
+        )
+      )
+      .catch((e: Error) => setError(`Parquet出力に失敗しました: ${e.message}`))
+      .finally(() => setParquetBusy(false));
+  };
 
   const MAX_SOURCE_CELLS = 500;
 
@@ -332,6 +347,20 @@ export function ConvertMode() {
             disabled={!records.length}
           >
             GeoJSON出力
+          </button>
+          <button
+            onClick={() => exportParquet(false)}
+            disabled={!records.length || parquetBusy}
+            title="属性のみのParquetファイル"
+          >
+            {parquetBusy ? "生成中..." : "Parquet出力"}
+          </button>
+          <button
+            onClick={() => exportParquet(true)}
+            disabled={!records.length || parquetBusy}
+            title="WKBジオメトリ付きGeoParquet 1.1（CRS: OGC:CRS84）"
+          >
+            {parquetBusy ? "生成中..." : "GeoParquet出力"}
           </button>
         </div>
         {records.length === 0 && !busy && (

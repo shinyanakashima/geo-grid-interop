@@ -3,7 +3,7 @@
  * 基準セルと他方式セルとの包含・交差関係を表示する。
  */
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { GridMap, GridMapHandle, GridLayerConfig } from "../map/GridMap";
 import { BackgroundSettings, SYSTEM_COLORS } from "../map/style";
 import { getAdapter, availableSystems } from "../lib/adapters";
@@ -101,7 +101,8 @@ export function CorrespondMode({ bg, urlState, onViewChange, onStateChange }: Pr
         const cell = getAdapter(baseConfig.system).pointToCell(
           lng,
           lat,
-          baseConfig.level
+          baseConfig.level,
+          baseConfig.heightM ?? 0
         );
         setError(null);
         selectCell(cell);
@@ -226,6 +227,37 @@ export function CorrespondMode({ bg, urlState, onViewChange, onStateChange }: Pr
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // 基準セルの親・子セル表示（指示書 §9.4）
+  const pedigree = useMemo(() => {
+    let parent: GridCell | null = null;
+    let children: GridCell[] = [];
+    if (baseCell) {
+      const adapter = getAdapter(baseCell.system);
+      try {
+        if (baseConfig.showParent && baseCell.parentId) {
+          parent = adapter.cellToGeometry(baseCell.parentId);
+        }
+        if (baseConfig.showChildren) {
+          children = adapter
+            .getChildren(baseCell.id)
+            .slice(0, 128)
+            .map((id) => adapter.cellToGeometry(id));
+        }
+      } catch {
+        // 親子を取得できないセルは無視
+      }
+    }
+    return { parent, children };
+  }, [baseCell, baseConfig.showParent, baseConfig.showChildren]);
+
+  const moveTarget = (index: number, delta: number) => {
+    const next = [...targets];
+    const j = index + delta;
+    if (j < 0 || j >= next.length) return;
+    [next[index], next[j]] = [next[j], next[index]];
+    setTargets(next);
+  };
 
   const overlayCells = results.flatMap((r) => {
     const filter =
@@ -376,25 +408,67 @@ export function CorrespondMode({ bg, urlState, onViewChange, onStateChange }: Pr
             <div>面積: {formatArea(baseCell.areaM2)}</div>
           </div>
         )}
+        <div className="row-group">
+          <label className="row">
+            <input
+              type="checkbox"
+              checked={baseConfig.showParent ?? false}
+              onChange={(e) =>
+                setBaseConfig((c) => ({ ...c, showParent: e.target.checked }))
+              }
+            />
+            親セル表示
+          </label>
+          <label className="row">
+            <input
+              type="checkbox"
+              checked={baseConfig.showChildren ?? false}
+              onChange={(e) =>
+                setBaseConfig((c) => ({ ...c, showChildren: e.target.checked }))
+              }
+            />
+            子セル表示
+          </label>
+        </div>
         <h3>比較対象</h3>
         {targets.map((t, i) => (
           <div key={t.system} className="target-row">
-            <label className="row">
-              <input
-                type="checkbox"
-                checked={t.enabled}
-                onChange={(e) => {
-                  const next = [...targets];
-                  next[i] = { ...t, enabled: e.target.checked };
-                  setTargets(next);
-                }}
-              />
-              <span
-                className="color-chip"
-                style={{ background: SYSTEM_COLORS[t.system] }}
-              />
-              {getAdapter(t.system).displayName}
-            </label>
+            <div className="target-head">
+              <label className="row">
+                <input
+                  type="checkbox"
+                  checked={t.enabled}
+                  onChange={(e) => {
+                    const next = [...targets];
+                    next[i] = { ...t, enabled: e.target.checked };
+                    setTargets(next);
+                  }}
+                />
+                <span
+                  className="color-chip"
+                  style={{ background: SYSTEM_COLORS[t.system] }}
+                />
+                {getAdapter(t.system).displayName}
+              </label>
+              <span className="order-buttons">
+                <button
+                  className="mini"
+                  title="表示順序を上へ（後に描画され前面になる）"
+                  disabled={i === 0}
+                  onClick={() => moveTarget(i, -1)}
+                >
+                  ↑
+                </button>
+                <button
+                  className="mini"
+                  title="表示順序を下へ"
+                  disabled={i === targets.length - 1}
+                  onClick={() => moveTarget(i, 1)}
+                >
+                  ↓
+                </button>
+              </span>
+            </div>
             <select
               value={String(t.level)}
               onChange={(e) => {
@@ -491,6 +565,8 @@ export function CorrespondMode({ bg, urlState, onViewChange, onStateChange }: Pr
           bg={bg}
           layer={baseConfig}
           selectedCell={baseCell}
+          parentCell={pedigree.parent}
+          childCells={pedigree.children}
           overlayCells={overlayCells}
           initialView={{ lng: urlState.lng, lat: urlState.lat, zoom: urlState.zoom }}
           onClick={handleClick}

@@ -105,6 +105,7 @@ export function buildTileCell(
     const voxelH = 2 ** (25 - z);
     cell.minHeightM = f * voxelH;
     cell.maxHeightM = (f + 1) * voxelH;
+    cell.metadata = { f };
   }
   return cell;
 }

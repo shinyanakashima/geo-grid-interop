@@ -1,5 +1,19 @@
 /** ファイルダウンロードユーティリティ */
 
+export function downloadBinary(
+  filename: string,
+  data: Uint8Array,
+  mime = "application/octet-stream"
+): void {
+  const blob = new Blob([data as BlobPart], { type: mime });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
 export function downloadText(
   filename: string,
   text: string,
