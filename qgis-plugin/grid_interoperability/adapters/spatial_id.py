@@ -80,10 +80,11 @@ def get_neighbors(sid: str) -> List[str]:
     return out
 
 
-def cells_for_bounds(bounds, level) -> List[GridCell]:
+def cells_for_bounds(bounds, level, height_m: float = 0.0) -> List[GridCell]:
     z = int(level)
+    f = height_to_f(height_m, z)
     return [
-        _xyz.build_tile_cell(z, x, y, SYSTEM, 0)
+        _xyz.build_tile_cell(z, x, y, SYSTEM, f)
         for x, y in _xyz.tiles_for_bounds(bounds, z)
     ]
 

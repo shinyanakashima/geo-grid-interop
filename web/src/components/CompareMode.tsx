@@ -108,7 +108,12 @@ export function CompareMode({ bg, urlState, onViewChange, onStateChange }: Props
       setClickPoint([lng, lat]);
       let lCell: GridCell | null = null;
       try {
-        lCell = getAdapter(leftConfig.system).pointToCell(lng, lat, leftConfig.level);
+        lCell = getAdapter(leftConfig.system).pointToCell(
+          lng,
+          lat,
+          leftConfig.level,
+          leftConfig.heightM ?? 0
+        );
         setLeftCell(lCell);
         setError(null);
       } catch (e) {
@@ -125,7 +130,12 @@ export function CompareMode({ bg, urlState, onViewChange, onStateChange }: Props
           }
         }
         setRightCell(
-          getAdapter(rightConfig.system).pointToCell(lng, lat, rightLevel)
+          getAdapter(rightConfig.system).pointToCell(
+            lng,
+            lat,
+            rightLevel,
+            rightConfig.heightM ?? 0
+          )
         );
       } catch (e) {
         setRightCell(null);

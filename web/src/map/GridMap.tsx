@@ -36,6 +36,12 @@ export interface GridLayerConfig {
   showParent?: boolean;
   /** 選択セルの子セルを表示（指示書 §8.6） */
   showChildren?: boolean;
+  /** 空間IDの鉛直位置（楕円体高 [m]、指示書 §11） */
+  heightM?: number;
+  /** 3Dボクセル表示（空間IDのみ） */
+  show3d?: boolean;
+  /** 3D表示の高さ倍率 */
+  heightScale?: number;
 }
 
 export interface GridMapHandle {
@@ -71,7 +77,12 @@ function cellsToFC(cells: GridCell[], colors?: string[]) {
     features: cells.map((c, i) => ({
       type: "Feature" as const,
       geometry: c.geometry,
-      properties: { id: c.id, color: colors?.[i] ?? "#000000" },
+      properties: {
+        id: c.id,
+        color: colors?.[i] ?? "#000000",
+        minH: c.minHeightM ?? 0,
+        maxH: c.maxHeightM ?? 0,
+      },
     })),
   };
 }
@@ -99,6 +110,7 @@ export const GridMap = forwardRef<GridMapHandle, Props>(function GridMap(
   const debounceRef = useRef<ReturnType<typeof setTimeout>>();
   const generationRef = useRef(0);
   const cursorMarkerRef = useRef<maplibregl.Marker | null>(null);
+  const prev3dRef = useRef(false);
 
   useImperativeHandle(ref, () => ({ get map() { return mapRef.current; } }), []);
 
@@ -144,6 +156,19 @@ export const GridMap = forwardRef<GridMapHandle, Props>(function GridMap(
       type: "fill",
       source: "grid",
       paint: { "fill-color": "#000000", "fill-opacity": 0 },
+    });
+    // 空間IDの3Dボクセル表示（指示書 §11。fill-extrusionで押し出す）
+    map.addLayer({
+      id: "grid-extrude",
+      type: "fill-extrusion",
+      source: "grid",
+      layout: { visibility: "none" },
+      paint: {
+        "fill-extrusion-color": "#000000",
+        "fill-extrusion-opacity": 0.35,
+        "fill-extrusion-base": 0,
+        "fill-extrusion-height": 0,
+      },
     });
     map.addLayer({
       id: "overlay-within-fill",
@@ -280,6 +305,7 @@ export const GridMap = forwardRef<GridMapHandle, Props>(function GridMap(
       level: layer.level,
       bounds,
       maxCells: MAX_CELLS_PER_LAYER,
+      heightM: layer.heightM ?? 0,
     })
       .then((cells) => {
         if (generation !== generationRef.current) return; // 古い結果は破棄
@@ -315,7 +341,7 @@ export const GridMap = forwardRef<GridMapHandle, Props>(function GridMap(
       map.off("moveend", handler);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [layer.system, layer.level, layer.visible, mapReady]);
+  }, [layer.system, layer.level, layer.visible, layer.heightM, mapReady]);
 
   // スタイル系設定の反映
   useEffect(() => {
@@ -337,6 +363,32 @@ export const GridMap = forwardRef<GridMapHandle, Props>(function GridMap(
     map.setPaintProperty("parent-line", "line-color", color);
     map.setPaintProperty("parent-line", "line-width", width + 1);
     map.setPaintProperty("children-line", "line-color", color);
+    // 3Dボクセル表示（空間IDのみ有効）
+    const is3d = !!layer.show3d && layer.system === "spatial-id";
+    const scale = layer.heightScale ?? 1;
+    map.setLayoutProperty(
+      "grid-extrude",
+      "visibility",
+      is3d ? "visible" : "none"
+    );
+    if (is3d) {
+      map.setPaintProperty("grid-extrude", "fill-extrusion-color", color);
+      // 地下ボクセル（負の高度）は0mへクランプして表示する
+      map.setPaintProperty("grid-extrude", "fill-extrusion-base", [
+        "max",
+        0,
+        ["*", ["get", "minH"], scale],
+      ]);
+      map.setPaintProperty("grid-extrude", "fill-extrusion-height", [
+        "max",
+        0,
+        ["*", ["get", "maxH"], scale],
+      ]);
+    }
+    if (is3d !== prev3dRef.current) {
+      prev3dRef.current = is3d;
+      map.easeTo({ pitch: is3d ? 55 : 0, duration: 600 });
+    }
     map.setLayoutProperty(
       "grid-label",
       "visibility",

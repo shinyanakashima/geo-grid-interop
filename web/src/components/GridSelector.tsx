@@ -147,6 +147,63 @@ export function GridSelector({ label, config, onChange, levelDisabled }: Props) 
           />
           グリッド表示
         </label>
+        {config.system === "spatial-id" && (
+          <>
+            <hr className="sep" />
+            <label>
+              高度（楕円体高） {config.heightM ?? 0} m
+              <input
+                type="range"
+                min={-500}
+                max={10000}
+                step={50}
+                value={config.heightM ?? 0}
+                onChange={(e) =>
+                  onChange({ ...config, heightM: parseFloat(e.target.value) })
+                }
+              />
+              <input
+                type="number"
+                step={10}
+                value={config.heightM ?? 0}
+                onChange={(e) =>
+                  onChange({
+                    ...config,
+                    heightM: parseFloat(e.target.value) || 0,
+                  })
+                }
+              />
+            </label>
+            <label className="row">
+              <input
+                type="checkbox"
+                checked={config.show3d ?? false}
+                onChange={(e) =>
+                  onChange({ ...config, show3d: e.target.checked })
+                }
+              />
+              3Dボクセル表示
+            </label>
+            {config.show3d && (
+              <label>
+                高さ倍率 ×{config.heightScale ?? 1}
+                <input
+                  type="range"
+                  min={0.2}
+                  max={10}
+                  step={0.2}
+                  value={config.heightScale ?? 1}
+                  onChange={(e) =>
+                    onChange({
+                      ...config,
+                      heightScale: parseFloat(e.target.value),
+                    })
+                  }
+                />
+              </label>
+            )}
+          </>
+        )}
       </details>
     </div>
   );

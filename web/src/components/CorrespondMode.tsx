@@ -101,7 +101,8 @@ export function CorrespondMode({ bg, urlState, onViewChange, onStateChange }: Pr
         const cell = getAdapter(baseConfig.system).pointToCell(
           lng,
           lat,
-          baseConfig.level
+          baseConfig.level,
+          baseConfig.heightM ?? 0
         );
         setError(null);
         selectCell(cell);

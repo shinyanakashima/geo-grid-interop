@@ -209,6 +209,17 @@ button.mini {
   font-size: 11.5px;
 }
 
+hr.sep {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 8px 0;
+}
+
+.inline-details input[type="number"] {
+  width: 80px;
+  margin-left: 6px;
+}
+
 label {
   display: block;
   margin: 8px 0;

@@ -99,10 +99,11 @@ export const spatialIdAdapter: GridAdapter = {
     return out;
   },
 
-  cellsForBounds(bounds, level) {
+  cellsForBounds(bounds, level, heightM = 0) {
     const z = Number(level);
+    const f = heightToF(heightM, z);
     return tilesForBounds(bounds, z).map(({ x, y }) =>
-      buildTileCell(z, x, y, "spatial-id", 0)
+      buildTileCell(z, x, y, "spatial-id", f)
     );
   },
 };

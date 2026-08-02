@@ -53,6 +53,20 @@ export function CellInfoTable({ left, right, clickPoint }: Props) {
     ["幅", formatLength(left?.widthM), formatLength(right?.widthM)],
     ["高さ", formatLength(left?.heightM), formatLength(right?.heightM)],
     ["辺長", formatLength(left?.edgeLengthM), formatLength(right?.edgeLengthM)],
+    [
+      "高度範囲（楕円体高）",
+      left?.minHeightM !== undefined
+        ? `${left.minHeightM} 〜 ${left.maxHeightM} m`
+        : "-",
+      right?.minHeightM !== undefined
+        ? `${right.minHeightM} 〜 ${right.maxHeightM} m`
+        : "-",
+    ],
+    [
+      "鉛直インデックス (f)",
+      left?.metadata?.f !== undefined ? String(left.metadata.f) : "-",
+      right?.metadata?.f !== undefined ? String(right.metadata.f) : "-",
+    ],
     ["親セルID", left?.parentId ?? "-", right?.parentId ?? "-"],
     [
       "子セル数",
